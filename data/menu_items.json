@@ -1,0 +1,56 @@
+[
+  {
+    "itemId": 101,
+    "name": "Phở Bò Tái",
+    "price": 50000.0,
+    "description": "Nước dùng hầm xương 8 tiếng, thịt bò tươi."
+  },
+  {
+    "itemId": 102,
+    "name": "Bún Chả Hà Nội",
+    "price": 45000.0,
+    "description": "Đặc sản nức tiếng với thịt nướng thơm lừng."
+  },
+  {
+    "itemId": 103,
+    "name": "Cơm Tấm Sườn Nướng",
+    "price": 55000.0,
+    "description": "Một bữa ăn no bụng với sườn nướng thơm."
+  },
+  {
+    "itemId": 104,
+    "name": "Bánh Mì Thịt Nướng",
+    "price": 35000.0,
+    "description": "Bánh mì giòn với thịt nướng và rau sống."
+  },
+  {
+    "itemId": 201,
+    "name": "Cà phê sữa đá",
+    "price": 25000.0,
+    "description": "Cà phê Robusta pha phin với sữa đặc."
+  },
+  {
+    "itemId": 202,
+    "name": "Trà đá",
+    "price": 15000.0,
+    "description": "Trà xanh mát lạnh."
+  },
+  {
+    "itemId": 203,
+    "name": "Nước cam ép",
+    "price": 30000.0,
+    "description": "Nước cam tươi ép nguyên chất."
+  },
+  {
+    "itemId": 204,
+    "name": "coffee",
+    "price": 20000.0,
+    "description": "cà phê thơm ngon"
+  },
+  {
+    "itemId": 205,
+    "name": "Bánh Oreo",
+    "price": 15000.0,
+    "description": "Bánh oreo ngon lắm"
+  }
+]

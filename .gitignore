@@ -1,0 +1,5 @@
+# Ignore environment variable files
+.env 
+.temp
+/ai_agent/venv
+.idea

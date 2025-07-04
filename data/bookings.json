@@ -1,0 +1,10 @@
+[
+  {
+    "bookingTime": "2025-07-10T10:30",
+    "customerId": 1,
+    "tableId": 1,
+    "numberOfGuests": 2,
+    "bookingId": 1,
+    "status": "CONFIRMED"
+  }
+]

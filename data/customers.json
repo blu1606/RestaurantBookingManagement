@@ -1,0 +1,31 @@
+[
+  {
+    "customerId": 1,
+    "name": "admin1",
+    "phone": "0900000001",
+    "email": "admin1@restaurant.com",
+    "activeBookingIds": [
+      1
+    ],
+    "role": "admin",
+    "password": "1111"
+  },
+  {
+    "customerId": 2,
+    "name": "admin2",
+    "phone": "0900000002",
+    "email": "admin2@restaurant.com",
+    "activeBookingIds": [],
+    "role": "admin",
+    "password": "2222"
+  },
+  {
+    "customerId": 3,
+    "name": "user1",
+    "phone": "0900000003",
+    "email": "user1@restaurant.com",
+    "activeBookingIds": [],
+    "role": "user",
+    "password": "3333"
+  }
+]
