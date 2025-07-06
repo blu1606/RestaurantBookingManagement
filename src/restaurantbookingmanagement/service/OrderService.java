@@ -55,6 +55,7 @@ public class OrderService {
         List<Order> orders = fileService.readOrdersFromFile();
         List<Table> tables = fileService.readTablesFromFile();
         Order order = new Order(nextOrderId++, booking);
+        
         // Gán tableId cho order
         if (booking != null && booking.getTable() != null) {
             order.setTableId(booking.getTable().getTableId());
@@ -67,6 +68,7 @@ public class OrderService {
             }
             fileService.writeTablesToFile(tables);
         }
+        
         orders.add(order);
         fileService.writeOrdersToFile(orders);
         return order;
@@ -113,7 +115,9 @@ public class OrderService {
      * Lấy tất cả orders cho booking cụ thể
      */
     public List<Order> getOrdersForBooking(int bookingId) {
-        return fileService.readOrdersFromFile().stream()
+        List<Order> orders = fileService.readOrdersFromFile();
+        updateOrderItemsWithMenuItems(orders);
+        return orders.stream()
                 .filter(order -> order.getBooking().getBookingId() == bookingId)
                 .collect(Collectors.toList());
     }
@@ -132,26 +136,6 @@ public class OrderService {
         return false;
     }
     
-    private void updateOrderTotalAmount(Order order) {
-        double total = 0.0;
-        for (Order.OrderItem oi : order.getItems()) {
-            MenuItem mi = findMenuItemById(oi.getItemId());
-            if (mi != null) {
-                oi.setItem(mi);
-                total += mi.getPrice() * oi.getAmount();
-            }
-        }
-        order.setOrderTime(order.getOrderTime()); // Đảm bảo không bị null
-        order.setStatus(order.getStatus());
-        order.setTableId(order.getTableId());
-        // Gán lại tổng tiền
-        try {
-            java.lang.reflect.Field f = order.getClass().getDeclaredField("totalAmount");
-            f.setAccessible(true);
-            f.set(order, total);
-        } catch (Exception e) {}
-    }
-    
     public boolean addItemToOrder(int orderId, String itemName, int quantity) {
         List<Order> orders = fileService.readOrdersFromFile();
         Order order = findOrderById(orderId, orders);
@@ -163,7 +147,6 @@ public class OrderService {
             return false;
         }
         order.addItem(item.getItemId(), quantity);
-        updateOrderTotalAmount(order);
         fileService.writeOrdersToFile(orders);
         return true;
     }
@@ -174,8 +157,11 @@ public class OrderService {
         if (order == null) {
             return false;
         }
+        MenuItem item = findMenuItemById(itemId);
+        if (item == null) {
+            return false;
+        }
         order.addItem(itemId, quantity);
-        updateOrderTotalAmount(order);
         fileService.writeOrdersToFile(orders);
         return true;
     }
@@ -191,7 +177,6 @@ public class OrderService {
             return false;
         }
         order.removeItem(item.getItemId());
-        updateOrderTotalAmount(order);
         fileService.writeOrdersToFile(orders);
         return true;
     }
@@ -218,15 +203,31 @@ public class OrderService {
                 .orElse(null);
     }
     
+    /**
+     * Cập nhật MenuItem cho các OrderItem
+     */
+    private void updateOrderItemsWithMenuItems(List<Order> orders) {
+        for (Order o : orders) {
+            for (Order.OrderItem oi : o.getItems()) {
+                if (oi.getItem() == null) {
+                    MenuItem mi = findMenuItemById(oi.getItemId());
+                    oi.setItem(mi);
+                }
+            }
+        }
+    }
+    
     public List<Order> getOrdersByBooking(Booking booking) {
-        return fileService.readOrdersFromFile().stream()
+        List<Order> orders = fileService.readOrdersFromFile();
+        updateOrderItemsWithMenuItems(orders);
+        return orders.stream()
                 .filter(order -> order.getBooking().getBookingId() == booking.getBookingId())
                 .collect(Collectors.toList());
     }
     
     public List<Order> getAllOrders() {
         List<Order> orders = fileService.readOrdersFromFile();
-        for (Order o : orders) updateOrderTotalAmount(o);
+        updateOrderItemsWithMenuItems(orders);
         return orders;
     }
     

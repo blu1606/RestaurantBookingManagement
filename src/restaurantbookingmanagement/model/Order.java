@@ -132,8 +132,12 @@ public class Order {
     }
     
     private void calculateTotalAmount() {
-        // Cần truy cập MenuItem để lấy giá, tạm thời để 0, sẽ cập nhật ở OrderService
-        // totalAmount = ...
+        totalAmount = 0.0;
+        for (OrderItem oi : items) {
+            if (oi.getItem() != null) {
+                totalAmount += oi.getItem().getPrice() * oi.getAmount();
+            }
+        }
     }
     
     @Override

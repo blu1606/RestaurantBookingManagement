@@ -235,4 +235,23 @@ public class ConsoleView {
         System.out.println("See you again! ��️");
     }
     
+    public void displayBillDetails(Order order) {
+        System.out.println("\n🧾 CHI TIẾT BILL:");
+        System.out.println("──────────────────────────────────────────────────────────────");
+        System.out.printf("%-25s | %-8s | %-10s | %-10s\n", "Tên món", "Số lượng", "Đơn giá", "Thành tiền");
+        System.out.println("──────────────────────────────────────────────────────────────");
+        double total = 0.0;
+        for (Order.OrderItem oi : order.getItems()) {
+            String name = oi.getItem().getName();
+            int qty = oi.getAmount();
+            double price = oi.getItem().getPrice();
+            double lineTotal = price * qty;
+            total += lineTotal;
+            System.out.printf("%-25s | %-8d | %-10.0f | %-10.0f\n", name, qty, price, lineTotal);
+        }
+        System.out.println("──────────────────────────────────────────────────────────────");
+        System.out.printf("%-25s   %-8s   %-10s   %-10.0f VND\n", "TỔNG CỘNG", "", "", total);
+        System.out.println("──────────────────────────────────────────────────────────────");
+    }
+    
 } 

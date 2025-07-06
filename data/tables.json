@@ -9,7 +9,7 @@
     "tableId": 2,
     "orderIds": [],
     "capacity": 4,
-    "status": "AVAILABLE"
+    "status": "RESERVED"
   },
   {
     "tableId": 3,
@@ -27,7 +27,7 @@
     "tableId": 5,
     "orderIds": [],
     "capacity": 8,
-    "status": "AVAILABLE"
+    "status": "RESERVED"
   },
   {
     "tableId": 6,

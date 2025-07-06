@@ -335,18 +335,13 @@ public class FileService {
             if (!file.exists()) {
                 return new ArrayList<>();
             }
-            
             try (Reader reader = new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8)) {
-                // Đọc dữ liệu JSON raw trước
                 List<Map<String, Object>> rawOrders = gson.fromJson(reader, new TypeToken<List<Map<String, Object>>>(){}.getType());
-                
                 if (rawOrders == null) {
                     return new ArrayList<>();
                 }
-                
-                // Đọc danh sách bookings đã resolve customer/table
                 List<Booking> bookings = readBookingsFromFile();
-                
+                List<MenuItem> menuItems = readMenuItemsFromFile();
                 List<Order> orders = new ArrayList<>();
                 for (Map<String, Object> rawOrder : rawOrders) {
                     Booking booking = null;
@@ -358,19 +353,15 @@ public class FileService {
                             .orElse(null);
                     }
                     if (booking == null) {
-                        booking = new Booking(); // fallback tránh null pointer
+                        booking = new Booking();
                     }
                     Order order = new Order(0, booking);
-                    
-                    // Set basic fields
                     if (rawOrder.containsKey("orderId")) {
                         order.setOrderId(((Number) rawOrder.get("orderId")).intValue());
                     }
                     if (rawOrder.containsKey("status")) {
                         order.setStatus((String) rawOrder.get("status"));
                     }
-                    
-                    // Parse order time
                     if (rawOrder.containsKey("orderTime")) {
                         String timeStr = (String) rawOrder.get("orderTime");
                         try {
@@ -380,15 +371,27 @@ public class FileService {
                             System.err.println("Error parsing order time: " + timeStr);
                         }
                     }
-                    
-                    // Parse tableId
                     if (rawOrder.containsKey("tableId")) {
                         order.setTableId(((Number) rawOrder.get("tableId")).intValue());
                     }
-                    
+                    // Parse items
+                    if (rawOrder.containsKey("items")) {
+                        List<Map<String, Object>> rawItems = (List<Map<String, Object>>) rawOrder.get("items");
+                        List<Order.OrderItem> items = new ArrayList<>();
+                        for (Map<String, Object> rawItem : rawItems) {
+                            int itemId = ((Number) rawItem.get("itemId")).intValue();
+                            int amount = ((Number) rawItem.get("amount")).intValue();
+                            MenuItem mi = menuItems.stream().filter(m -> m.getItemId() == itemId).findFirst().orElse(null);
+                            if (mi != null) {
+                                Order.OrderItem orderItem = new Order.OrderItem(itemId, amount);
+                                orderItem.setItem(mi);
+                                items.add(orderItem);
+                            }
+                        }
+                        order.setItems(items);
+                    }
                     orders.add(order);
                 }
-                
                 return orders;
             }
         } catch (Exception e) {
@@ -403,8 +406,6 @@ public class FileService {
     public synchronized void writeOrdersToFile(List<Order> orders) {
         try {
             File file = new File(DATA_DIR, "orders.json");
-            
-            // Convert Order objects to JSON format with IDs
             List<Map<String, Object>> jsonOrders = new ArrayList<>();
             for (Order order : orders) {
                 Map<String, Object> jsonOrder = new HashMap<>();
@@ -414,9 +415,17 @@ public class FileService {
                 jsonOrder.put("status", order.getStatus());
                 jsonOrder.put("totalAmount", order.getTotalAmount());
                 jsonOrder.put("tableId", order.getTableId());
+                // Write items
+                List<Map<String, Object>> items = new ArrayList<>();
+                for (Order.OrderItem oi : order.getItems()) {
+                    Map<String, Object> itemObj = new HashMap<>();
+                    itemObj.put("itemId", oi.getItemId());
+                    itemObj.put("amount", oi.getAmount());
+                    items.add(itemObj);
+                }
+                jsonOrder.put("items", items);
                 jsonOrders.add(jsonOrder);
             }
-            
             try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
                 gson.toJson(jsonOrders, writer);
             }

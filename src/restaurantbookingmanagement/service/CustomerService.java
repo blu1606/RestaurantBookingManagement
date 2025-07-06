@@ -87,7 +87,7 @@ public class CustomerService {
     public Customer findCustomerByName(String name) {
         List<Customer> customers = fileService.readCustomersFromFile();
         return customers.stream()
-                .filter(c -> c.getName().equals(name))
+                .filter(c -> c.getName().equalsIgnoreCase(name))
                 .findFirst()
                 .orElse(null);
     }
@@ -119,7 +119,7 @@ public class CustomerService {
     }
     
     /**
-     * Cập nhật thông tin khách hàng
+     * Cập nhật thông tin khách hàng theo ID
      */
     public boolean updateCustomer(int customerId, String name, String phone, String email) {
         List<Customer> customers = fileService.readCustomersFromFile();
@@ -314,30 +314,45 @@ public class CustomerService {
         System.out.println("──────────────────────────────────────────────────────────────");
     }
     
+    /**
+     * Cập nhật thông tin khách hàng theo số điện thoại
+     */
     public boolean updateCustomer(String phone, String newName, String newPhone, String newEmail) {
-        List<Customer> customers = getAllCustomers();
-        Customer customer = null;
-        for (Customer c : customers) if (c.getPhone().equals(phone)) customer = c;
-        if (customer == null) return false;
-        if (newName != null && !newName.isEmpty()) customer.setName(newName);
-        if (newPhone != null && !newPhone.isEmpty()) customer.setPhone(newPhone);
-        if (newEmail != null && !newEmail.isEmpty()) customer.setEmail(newEmail);
-        for (int i = 0; i < customers.size(); i++) if (customers.get(i).getPhone().equals(phone)) customers.set(i, customer);
-        new FileService().writeCustomersToFile(customers);
-        return true;
+        List<Customer> customers = fileService.readCustomersFromFile();
+        
+        for (int i = 0; i < customers.size(); i++) {
+            if (customers.get(i).getPhone().equals(phone)) {
+                Customer customer = customers.get(i);
+                if (newName != null && !newName.isEmpty()) {
+                    customer.setName(newName);
+                }
+                if (newPhone != null && !newPhone.isEmpty()) {
+                    customer.setPhone(newPhone);
+                }
+                if (newEmail != null && !newEmail.isEmpty()) {
+                    customer.setEmail(newEmail);
+                }
+                customers.set(i, customer);
+                fileService.writeCustomersToFile(customers);
+                return true;
+            }
+        }
+        return false;
     }
     
+    /**
+     * Xóa khách hàng theo số điện thoại
+     */
     public boolean deleteCustomer(String phone) {
-        List<Customer> customers = getAllCustomers();
-        boolean found = false;
+        List<Customer> customers = fileService.readCustomersFromFile();
+        
         for (int i = 0; i < customers.size(); i++) {
             if (customers.get(i).getPhone().equals(phone)) {
                 customers.remove(i);
-                found = true;
-                break;
+                fileService.writeCustomersToFile(customers);
+                return true;
             }
         }
-        if (found) new FileService().writeCustomersToFile(customers);
-        return found;
+        return false;
     }
 } 

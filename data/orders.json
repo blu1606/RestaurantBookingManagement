@@ -1,10 +1,48 @@
 [
   {
-    "totalAmount": 0.0,
-    "orderTime": "2025-07-03T11:18:55.846918800",
+    "totalAmount": 400000.0,
+    "orderTime": "2025-07-04T14:58:38.835938400",
     "orderId": 1,
-    "tableId": 1,
-    "bookingId": 1,
+    "tableId": 5,
+    "items": [
+      {
+        "itemId": 101,
+        "amount": 5
+      },
+      {
+        "itemId": 205,
+        "amount": 10
+      }
+    ],
+    "bookingId": 2,
     "status": "PENDING"
+  },
+  {
+    "totalAmount": 150000.0,
+    "orderTime": "2025-07-06T17:27:01.382286700",
+    "orderId": 2,
+    "tableId": 2,
+    "items": [
+      {
+        "itemId": 205,
+        "amount": 10
+      }
+    ],
+    "bookingId": 3,
+    "status": "PENDING"
+  },
+  {
+    "totalAmount": 250000.0,
+    "orderTime": "2025-07-06T17:27:29.548510300",
+    "orderId": 3,
+    "tableId": 3,
+    "items": [
+      {
+        "itemId": 101,
+        "amount": 5
+      }
+    ],
+    "bookingId": 4,
+    "status": "COMPLETED"
   }
 ]

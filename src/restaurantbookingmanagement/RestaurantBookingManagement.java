@@ -26,10 +26,13 @@ public class RestaurantBookingManagement {
             // 2. Initialize View
             ConsoleView view = new ConsoleView();
 
-            // 3. Initialize Controller and inject Model, View
-            RestaurantController controller = new RestaurantController(bookingService, orderService, view);
+            // 3. Initialize Services
+            CustomerService customerService = new CustomerService();
+            
+            // 4. Initialize Controller and inject Model, View
+            MainController controller = new MainController(bookingService, orderService, customerService, view);
 
-            // 4. Start application
+            // 5. Start application
             controller.run();
             
         } catch (Exception e) {

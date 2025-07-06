@@ -61,6 +61,7 @@ public class BookingService {
     public Booking createBooking(Customer customer, int numberOfGuests, LocalDateTime bookingTime) {
         List<Table> tables = fileService.readTablesFromFile();
         List<Booking> bookings = fileService.readBookingsFromFile();
+        
         // Lưu thông tin khách hàng vào customers.json và lấy customer đã được lưu
         Customer savedCustomer = saveCustomerToFile(customer);
 
