@@ -1,0 +1,184 @@
+[
+  {
+    "name": "add_menu",
+    "description": "Thêm món ăn mới vào menu",
+    "parameters": ["name", "price", "description"],
+    "service": "OrderService",
+    "example_user_prompt": "Thêm món phở bò giá 50000 vào menu"
+  },
+  {
+    "name": "delete_menu",
+    "description": "Xóa món ăn khỏi menu",
+    "parameters": ["itemId"],
+    "service": "OrderService",
+    "example_user_prompt": "Xóa món có ID 3 khỏi menu"
+  },
+  {
+    "name": "update_menu",
+    "description": "Cập nhật thông tin món ăn",
+    "parameters": ["itemId", "name", "price", "description"],
+    "service": "OrderService",
+    "example_user_prompt": "Cập nhật món ID 2 thành phở gà giá 45000"
+  },
+  {
+    "name": "add_item_to_order",
+    "description": "Thêm món vào đơn hàng",
+    "parameters": ["orderId", "itemName", "quantity"],
+    "service": "OrderService",
+    "example_user_prompt": "Thêm 2 phở bò vào đơn hàng 5"
+  },
+  {
+    "name": "remove_item_from_order",
+    "description": "Xóa món khỏi đơn hàng",
+    "parameters": ["orderId", "itemName"],
+    "service": "OrderService",
+    "example_user_prompt": "Xóa phở bò khỏi đơn hàng 5"
+  },
+  {
+    "name": "complete_order",
+    "description": "Hoàn thành đơn hàng (thanh toán)",
+    "parameters": ["orderId"],
+    "service": "OrderService",
+    "example_user_prompt": "Hoàn thành đơn hàng 5"
+  },
+  {
+    "name": "calculate_bill",
+    "description": "Tính tiền cho booking",
+    "parameters": ["bookingId"],
+    "service": "OrderService",
+    "example_user_prompt": "Tính tiền cho booking 10"
+  },
+  {
+    "name": "get_revenue",
+    "description": "Xem tổng doanh thu",
+    "parameters": [],
+    "service": "OrderService",
+    "example_user_prompt": "Xem tổng doanh thu"
+  },
+  {
+    "name": "add_table",
+    "description": "Thêm bàn mới cho nhà hàng",
+    "parameters": ["capacity"],
+    "service": "BookingService",
+    "example_user_prompt": "Thêm bàn 6 người"
+  },
+  {
+    "name": "delete_table",
+    "description": "Xóa bàn khỏi nhà hàng",
+    "parameters": ["tableId"],
+    "service": "BookingService",
+    "example_user_prompt": "Xóa bàn 3"
+  },
+  {
+    "name": "update_table",
+    "description": "Cập nhật thông tin bàn",
+    "parameters": ["tableId", "capacity", "status"],
+    "service": "BookingService",
+    "example_user_prompt": "Cập nhật bàn 2 thành 8 người"
+  },
+  {
+    "name": "search_tables",
+    "description": "Tìm kiếm bàn theo từ khóa",
+    "parameters": ["keyword"],
+    "service": "BookingService",
+    "example_user_prompt": "Tìm bàn có ID 5"
+  },
+  {
+    "name": "show_available_tables",
+    "description": "Hiển thị danh sách các bàn còn trống, chưa có ai đặt",
+    "parameters": [],
+    "service": "BookingService",
+    "example_user_prompt": "Xem các bàn còn trống, chưa có ai đặt"
+  },
+  {
+    "name": "show_all_tables",
+    "description": "Hiển thị tất cả bàn trong nhà hàng và trạng thái của chúng",
+    "parameters": [],
+    "service": "BookingService",
+    "example_user_prompt": "Xem tất cả bàn trong nhà hàng"
+  },
+  {
+    "name": "create_booking",
+    "description": "Tạo đặt bàn mới",
+    "parameters": ["customerName", "customerPhone", "guests", "dateTime"],
+    "service": "BookingService",
+    "example_user_prompt": "Đặt bàn cho Nam 0988888888 4 người ngày 15/12/2024 19:00"
+  },
+  {
+    "name": "cancel_booking",
+    "description": "Hủy đặt bàn",
+    "parameters": ["bookingId"],
+    "service": "BookingService",
+    "example_user_prompt": "Hủy đặt bàn 10"
+  },
+  {
+    "name": "complete_booking",
+    "description": "Hoàn thành đặt bàn",
+    "parameters": ["bookingId"],
+    "service": "BookingService",
+    "example_user_prompt": "Hoàn thành đặt bàn 10"
+  },
+  {
+    "name": "update_booking",
+    "description": "Cập nhật thông tin đặt bàn",
+    "parameters": ["bookingId", "guests", "dateTime"],
+    "service": "BookingService",
+    "example_user_prompt": "Cập nhật đặt bàn 10 thành 6 người"
+  },
+  {
+    "name": "delete_booking",
+    "description": "Xóa đặt bàn theo ID",
+    "parameters": ["bookingId"],
+    "service": "BookingService",
+    "example_user_prompt": "Xóa đặt bàn có ID 10"
+  },
+  {
+    "name": "create_customer",
+    "description": "Tạo khách hàng mới",
+    "parameters": ["name", "phone", "email"],
+    "service": "CustomerService",
+    "example_user_prompt": "Tạo khách hàng Nam 0988888888 nam@email.com"
+  },
+  {
+    "name": "update_customer",
+    "description": "Cập nhật thông tin khách hàng",
+    "parameters": ["customerId", "name", "phone", "email"],
+    "service": "CustomerService",
+    "example_user_prompt": "Cập nhật khách hàng 5 thành Minh 0999999999"
+  },
+  {
+    "name": "delete_customer",
+    "description": "Xóa khách hàng",
+    "parameters": ["customerId"],
+    "service": "CustomerService",
+    "example_user_prompt": "Xóa khách hàng 5"
+  },
+  {
+    "name": "get_customer_info",
+    "description": "Xem thông tin chi tiết khách hàng",
+    "parameters": ["customerId"],
+    "service": "CustomerService",
+    "example_user_prompt": "Xem thông tin khách hàng 5"
+  },
+  {
+    "name": "customer_search",
+    "description": "Tìm kiếm khách hàng theo tên hoặc số điện thoại",
+    "parameters": ["searchTerm"],
+    "service": "CustomerService",
+    "example_user_prompt": "Tìm khách tên Nam hoặc số 0988..."
+  },
+  {
+    "name": "show_menu",
+    "description": "Hiển thị toàn bộ menu nhà hàng",
+    "parameters": [],
+    "service": "OrderService",
+    "example_user_prompt": "Cho tôi xem menu"
+  },
+  {
+    "name": "fix_data",
+    "description": "Sửa lỗi dữ liệu booking bị thiếu thông tin khách hàng",
+    "parameters": [],
+    "service": "BookingService",
+    "example_user_prompt": "Sửa lỗi dữ liệu đặt bàn"
+  }
+] 

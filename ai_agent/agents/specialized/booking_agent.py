@@ -11,7 +11,8 @@ class BookingAgent(BaseAgent):
         super().__init__(
             agent_name="BookingAgent",
             data_files=["tables.json", "bookings.json", "customers.json"],
-            gemini_model=gemini_model
+            gemini_model=gemini_model,
+            service_type="BookingService"  # Chỉ xử lý BookingService tools
         )
     
     def get_system_prompt(self) -> str:
@@ -23,15 +24,26 @@ class BookingAgent(BaseAgent):
         3. Thu thập thông tin cần thiết: tên, số điện thoại, số người, thời gian
         4. Xác nhận thông tin đặt bàn
         5. Hướng dẫn quy trình đặt bàn
+        6. Quản lý bàn: thêm, xóa, cập nhật thông tin bàn
+        7. Quản lý đặt bàn: tạo, hủy, cập nhật đặt bàn
         
         Luôn đảm bảo thu thập đầy đủ thông tin cần thiết trước khi xác nhận đặt bàn.
         """
     
     def process_request(self, user_input: str, session_id: str = "default", chat_session=None) -> Dict[str, Any]:
-        # Lấy context từ knowledge base (booking info, table status)
-        context = self._get_relevant_context(user_input)
+        # 1. Check if user_input matches any tool
+        tool = self.detect_tool_from_prompt(user_input)
+        if tool:
+            # Extract parameters (simple: just return empty or all None, real use: NLP extract)
+            parameters = {param: None for param in tool.get("parameters", [])}
+            return self.create_response(
+                action=tool["name"],
+                parameters=parameters,
+                natural_response=f"Tôi sẽ thực hiện tác vụ: {tool['description']} (service: {tool['service']})"
+            )
         
-        # Tạo prompt cho Gemini
+        # 2. Fallback: Lấy context từ knowledge base (tables, bookings)
+        context = self._get_relevant_context(user_input)
         prompt = f"""
         {self.get_system_prompt()}
         
@@ -40,64 +52,25 @@ class BookingAgent(BaseAgent):
         
         Yêu cầu của khách hàng: {user_input}
         
-        Hãy phân tích yêu cầu và trả về JSON với format phù hợp:
+        Hãy trả lời một cách thân thiện và hữu ích. Nếu khách hàng hỏi về:
+        - Thông tin bàn: Mô tả về các loại bàn, sức chứa
+        - Quy trình đặt bàn: Hướng dẫn cách đặt bàn
+        - Thời gian phục vụ: Thông tin về giờ mở cửa, thời gian đặt bàn
+        - Chính sách đặt bàn: Quy định về hủy, thay đổi đặt bàn
+        - Tư vấn bàn: Gợi ý bàn phù hợp theo số người
         
-        Nếu khách hàng muốn đặt bàn và đã có đủ thông tin:
-        {{
-            "action": "book_table",
-            "parameters": {{
-                "customerName": "tên khách hàng",
-                "customerPhone": "số điện thoại",
-                "guests": "số người",
-                "dateTime": "ngày giờ đặt bàn",
-                "specialRequests": "yêu cầu đặc biệt nếu có"
-            }},
-            "naturalResponse": "Câu trả lời xác nhận đặt bàn"
-        }}
-        
-        Nếu khách hàng muốn đặt bàn nhưng thiếu thông tin:
-        {{
-            "action": "collect_booking_info",
-            "parameters": {{
-                "missingInfo": "thông tin còn thiếu",
-                "currentInfo": "thông tin đã có"
-            }},
-            "naturalResponse": "Câu trả lời yêu cầu thông tin bổ sung"
-        }}
-        
-        Nếu khách hàng kiểm tra bàn trống:
-        {{
-            "action": "check_availability",
-            "parameters": {{
-                "date": "ngày kiểm tra",
-                "time": "giờ kiểm tra",
-                "guests": "số người"
-            }},
-            "naturalResponse": "Câu trả lời về tình trạng bàn"
-        }}
-        
-        Nếu khách hàng hỏi về quy trình đặt bàn:
-        {{
-            "action": "booking_info",
-            "parameters": {{}},
-            "naturalResponse": "Câu trả lời hướng dẫn đặt bàn"
-        }}
+        Trả lời bằng tiếng Việt, thân thiện và hữu ích.
         """
-        
-        # Gọi Gemini với chat_session
         response_text = self._call_gemini(prompt, chat_session=chat_session)
-        
-        # Parse JSON response with improved error handling
         response_data = self._parse_json_response(
-            response_text, 
-            fallback_action="collect_booking_info",
-            fallback_response="Tôi sẽ giúp bạn đặt bàn. Bạn có thể cho tôi biết tên và số điện thoại không?"
+            response_text,
+            fallback_action="show_booking_info",
+            fallback_response="Tôi sẽ giúp bạn với thông tin đặt bàn. Bạn cần hỗ trợ gì?"
         )
-        
         return self.create_response(
-            action=response_data.get("action", "collect_booking_info"),
+            action=response_data.get("action", "show_booking_info"),
             parameters=response_data.get("parameters", {}),
-            natural_response=response_data.get("naturalResponse", "Tôi sẽ giúp bạn đặt bàn. Bạn có thể cho tôi biết tên và số điện thoại không?")
+            natural_response=response_data.get("naturalResponse", "Tôi sẽ giúp bạn với thông tin đặt bàn.")
         )
     
     def _format_knowledge_item(self, item: Dict[str, Any]) -> str:

@@ -17,6 +17,13 @@ public class AiController {
         // Có thể mở rộng để truyền sessionId nếu cần
         return aiAgentConnector.processUserInput(userInput, role);
     }
+    
+    /**
+     * Gửi yêu cầu đến AI Agent và nhận phản hồi với session ID
+     */
+    public AIResponse chatWithAI(String userInput, String role) {
+        return aiAgentConnector.processUserInput(userInput, role);
+    }
 
     /**
      * Kiểm tra AI Agent có sẵn sàng không

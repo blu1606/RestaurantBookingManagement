@@ -306,4 +306,11 @@ public class OrderController {
             return getDoubleWithCancel(message);
         }
     }
+    
+    /**
+     * Getter cho OrderService
+     */
+    public OrderService getOrderService() {
+        return orderService;
+    }
 } 

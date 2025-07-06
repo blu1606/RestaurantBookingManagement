@@ -12,7 +12,7 @@ class FeedbackAgent(BaseAgent):
     def __init__(self, gemini_model=None):
         super().__init__(
             agent_name="FeedbackAgent",
-            knowledge_file="knowledge/feedback_knowledge.json",
+            data_files=["knowledge/feedback_knowledge.json"],
             gemini_model=gemini_model
         )
     

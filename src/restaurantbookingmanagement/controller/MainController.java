@@ -29,6 +29,7 @@ public class MainController {
         
         // Khởi tạo user controller
         this.userController = new UserController(bookingService, orderService, view, authController);
+        this.userController.setCustomerService(customerService);
         
         // Khởi tạo manager controller
         this.managerController = new ManagerController(menuController, tableController, 

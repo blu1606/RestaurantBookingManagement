@@ -9,6 +9,7 @@ import google.generativeai as genai
 
 
 from ..utils.rate_limiter import RateLimiter
+from ..utils.tool_detector import ToolDetector
 
 
 class BaseAgent(ABC):
@@ -16,17 +17,40 @@ class BaseAgent(ABC):
     Base class cho tất cả AI Agent chuyên biệt
     """
     
-    def __init__(self, agent_name: str, data_files: list = None, gemini_model=None):
+    def __init__(self, agent_name: str, data_files: list = None, gemini_model=None, service_type: str = None):
         self.agent_name = agent_name
         self.data_files = data_files or []
         self.gemini_model = gemini_model
+        self.service_type = service_type  # Service type của agent này
         self.vector_db = None
         self.retriever = None
         self.knowledge_base = []
-        self.rate_limiter = RateLimiter(max_requests=8, time_window=60)  # Conservative rate limiting
+        self.rate_limiter = RateLimiter()
         
-        # Load knowledge base from data files
+        # Load tools trước
+        self._load_tools()
+        
+        # Load knowledge base
         self._load_knowledge_base()
+        
+        # Build vector database
+        self._build_vector_db()
+    
+    def _load_tools(self):
+        """
+        Load tools từ file tools.json
+        """
+        try:
+            tools_path = os.path.join(os.path.dirname(__file__), "..", "..", "tools.json")
+            with open(tools_path, 'r', encoding='utf-8') as f:
+                tools_data = json.load(f)
+            
+            # Sử dụng singleton ToolDetector
+            self.tool_detector = ToolDetector.get_instance(tools_data)
+            print(f"✅ {self.agent_name}: Loaded {len(tools_data)} tools from tools.json")
+        except Exception as e:
+            print(f"🔥 {self.agent_name}: Error loading tools: {e}")
+            self.tool_detector = None
     
     def _load_knowledge_base(self):
         """
@@ -34,11 +58,32 @@ class BaseAgent(ABC):
         """
         try:
             self.knowledge_base = []
-            data_dir = "../../data"  # Path to data folder
+            
+            # Get the absolute path to the data directory
+            # Try multiple possible paths
+            possible_data_dirs = [
+                os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"),  # From ai_agent/agents/core/
+                os.path.join(os.path.dirname(__file__), "..", "..", "data"),       # From ai_agent/agents/
+                os.path.join(os.getcwd(), "data"),                                  # From project root
+                "data"                                                             # Relative to current working directory
+            ]
+            
+            data_dir = None
+            for dir_path in possible_data_dirs:
+                if os.path.exists(dir_path):
+                    data_dir = dir_path
+                    break
+            
+            if not data_dir:
+                print(f"🔥 {self.agent_name}: Could not find data directory")
+                return
             
             # Load from specified data files
             for data_file in self.data_files:
-                file_path = os.path.join(data_dir, data_file)
+                # Remove any "../" prefixes from data_file as we're using absolute paths
+                clean_data_file = data_file.replace("../", "").replace("../../", "")
+                file_path = os.path.join(data_dir, clean_data_file)
+                
                 if os.path.exists(file_path):
                     with open(file_path, 'r', encoding='utf-8') as f:
                         data = json.load(f)
@@ -52,8 +97,6 @@ class BaseAgent(ABC):
             
             if self.knowledge_base:
                 print(f"✅ {self.agent_name}: Loaded {len(self.knowledge_base)} items from data files")
-                # Build vector database
-                self._build_vector_db()
             else:
                 print(f"⚠️ {self.agent_name}: No data files loaded")
         except Exception as e:
@@ -150,14 +193,56 @@ class BaseAgent(ABC):
     def create_response(self, action: str, parameters: Dict[str, Any], 
                        natural_response: str) -> Dict[str, Any]:
         """
-        Tạo response chuẩn
+        Tạo response chuẩn với xử lý actions từ Java services
         """
+        # Clean parameters to avoid null values
+        cleaned_parameters = {}
+        for key, value in parameters.items():
+            if value is not None and value != "null" and value != "":
+                cleaned_parameters[key] = value
+        
+        # Check if this is a Java service action that needs special handling
+        java_service_actions = [
+            "add_menu", "delete_menu", "update_menu", "add_item_to_order", "remove_item_from_order",
+            "complete_order", "calculate_bill", "get_revenue", "add_table", "delete_table", 
+            "update_table", "search_tables", "show_available_tables", "show_all_tables", "create_booking", "cancel_booking", "complete_booking",
+            "update_booking", "delete_booking", "create_customer", "update_customer", "delete_customer",
+            "get_customer_info", "customer_search", "show_menu", "fix_data"
+        ]
+        
+        if action in java_service_actions:
+            # Lấy service type từ tool definition
+            service_type = self._get_service_type_from_action(action)
+            if service_type:
+                # Add metadata to indicate this should be handled by Java service
+                return {
+                    "action": action,
+                    "parameters": cleaned_parameters,
+                    "naturalResponse": natural_response,
+                    "agent": self.agent_name,
+                    "requiresJavaService": True,
+                    "javaServiceType": service_type
+                }
+        
         return {
             "action": action,
-            "parameters": parameters,
+            "parameters": cleaned_parameters,
             "naturalResponse": natural_response,
             "agent": self.agent_name
         }
+    
+    def _get_service_type_from_action(self, action: str) -> str:
+        """
+        Lấy service type từ tool definition thay vì hardcode mapping
+        """
+        if not self.tool_detector:
+            return None
+        
+        for tool in self.tool_detector.tools:
+            if tool.get("name") == action:
+                return tool.get("service")
+        
+        return None
     
     def _parse_json_response(self, response_text: str, fallback_action: str = "clarify", 
                            fallback_response: str = "Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.") -> Dict[str, Any]:
@@ -166,14 +251,43 @@ class BaseAgent(ABC):
         """
         try:
             # First, try to parse as-is
-            return json.loads(response_text)
+            parsed = json.loads(response_text)
+            
+            # Clean up null values to prevent JsonNull errors
+            if isinstance(parsed, dict):
+                # Clean parameters
+                if "parameters" in parsed and isinstance(parsed["parameters"], dict):
+                    cleaned_params = {}
+                    for key, value in parsed["parameters"].items():
+                        if value is not None and value != "null" and value != "":
+                            cleaned_params[key] = value
+                    parsed["parameters"] = cleaned_params
+                
+                # Ensure required fields exist
+                if "action" not in parsed:
+                    parsed["action"] = fallback_action
+                if "naturalResponse" not in parsed:
+                    parsed["naturalResponse"] = fallback_response
+                if "parameters" not in parsed:
+                    parsed["parameters"] = {}
+            
+            return parsed
         except json.JSONDecodeError:
             # Try to extract JSON from the response using regex
             import re
             json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
             if json_match:
                 try:
-                    return json.loads(json_match.group())
+                    parsed = json.loads(json_match.group())
+                    # Clean up null values
+                    if isinstance(parsed, dict):
+                        if "parameters" in parsed and isinstance(parsed["parameters"], dict):
+                            cleaned_params = {}
+                            for key, value in parsed["parameters"].items():
+                                if value is not None and value != "null" and value != "":
+                                    cleaned_params[key] = value
+                            parsed["parameters"] = cleaned_params
+                    return parsed
                 except json.JSONDecodeError:
                     pass
             
@@ -183,4 +297,25 @@ class BaseAgent(ABC):
                 "action": fallback_action,
                 "parameters": {},
                 "naturalResponse": fallback_response
-            } 
+            }
+    
+    def detect_tool_from_prompt(self, user_input: str) -> Optional[Dict[str, Any]]:
+        """
+        Detect if user_input matches any tool using semantic similarity
+        Chỉ xử lý tools thuộc service của agent này
+        """
+        if not self.tool_detector:
+            return None
+        
+        # Lọc tools theo service type của agent
+        if self.service_type:
+            available_tools = [tool for tool in self.tool_detector.tools if tool.get("service") == self.service_type]
+            print(f"🔍 {self.agent_name}: Checking {len(available_tools)} tools for service '{self.service_type}'")
+        else:
+            available_tools = self.tool_detector.tools
+            print(f"🔍 {self.agent_name}: Checking all {len(available_tools)} tools (no service filter)")
+        
+        # Tạo temporary tool detector với filtered tools
+        temp_detector = ToolDetector(available_tools)
+        
+        return temp_detector.detect_tool_from_prompt(user_input) 

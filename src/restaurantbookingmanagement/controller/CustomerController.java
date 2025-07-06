@@ -168,4 +168,11 @@ public class CustomerController {
     public void displayAllCustomers() {
         customerService.displayAllCustomers();
     }
+    
+    /**
+     * Getter cho CustomerService
+     */
+    public CustomerService getCustomerService() {
+        return customerService;
+    }
 } 

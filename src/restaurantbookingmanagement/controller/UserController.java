@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
+import restaurantbookingmanagement.ai.AIResponse;
 
 /**
  * Controller xử lý các chức năng cho user
@@ -17,6 +18,15 @@ public class UserController {
     private final OrderService orderService;
     private final ConsoleView view;
     private final AuthController authController;
+    private final AiController aiController = new AiController();
+    private final AiService aiService = new AiService();
+    
+    // Thêm CustomerService
+    private CustomerService customerService;
+    
+    public void setCustomerService(CustomerService customerService) {
+        this.customerService = customerService;
+    }
     
     public UserController(BookingService bookingService, OrderService orderService, 
                         ConsoleView view, AuthController authController) {
@@ -456,6 +466,7 @@ public class UserController {
      */
     private void chatWithAI() {
         view.displayMessage("\n--- Chế độ Chat với AI (gõ 'back' để quay lại menu, 'debug' để bật/tắt debug) ---");
+        String sessionId = "user_" + System.currentTimeMillis();
         while (true) {
             String userInput = view.getUserInput();
             if (userInput.equalsIgnoreCase("back") || userInput.equalsIgnoreCase("menu")) {
@@ -468,7 +479,15 @@ public class UserController {
                 continue;
             }
             if (userInput.isEmpty()) continue;
-            view.displayMessage("AI chat chức năng sẽ được implement sau.");
+
+            // Gửi tới AI agent
+            AIResponse response = aiController.chatWithAI(userInput, "USER", sessionId);
+            if (response != null) {
+                // Xử lý response thông qua AiService
+                aiService.processAIResponse(response, orderService, bookingService, customerService, view);
+            } else {
+                view.displayMessage("AI: Xin lỗi, tôi không thể trả lời lúc này.");
+            }
         }
     }
     

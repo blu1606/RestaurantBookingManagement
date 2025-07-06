@@ -2,6 +2,7 @@ package restaurantbookingmanagement.controller;
 
 import restaurantbookingmanagement.view.*;
 import restaurantbookingmanagement.utils.DebugUtil;
+import restaurantbookingmanagement.ai.AIResponse;
 
 /**
  * Controller xử lý các chức năng cho manager
@@ -14,6 +15,8 @@ public class ManagerController {
     private final OrderController orderController;
     private final ConsoleView view;
     private final UserController userController;
+    private final AiController aiController = new AiController();
+    private final restaurantbookingmanagement.service.AiService aiService = new restaurantbookingmanagement.service.AiService();
     
     public ManagerController(MenuController menuController, TableController tableController,
                            CustomerController customerController, BookingController bookingController,
@@ -106,6 +109,7 @@ public class ManagerController {
      */
     private void chatWithAI() {
         view.displayMessage("\n--- Chế độ Chat với AI (gõ 'back' để quay lại menu, 'debug' để bật/tắt debug) ---");
+        String sessionId = "manager_" + System.currentTimeMillis();
         while (true) {
             String userInput = view.getUserInput();
             if (userInput.equalsIgnoreCase("back") || userInput.equalsIgnoreCase("menu")) {
@@ -118,7 +122,18 @@ public class ManagerController {
                 continue;
             }
             if (userInput.isEmpty()) continue;
-            view.displayMessage("AI chat chức năng sẽ được implement sau.");
+
+            // Gửi tới AI agent
+            AIResponse response = aiController.chatWithAI(userInput, "MANAGER", sessionId);
+            if (response != null) {
+                            // Xử lý response thông qua AiService với đầy đủ services
+            // Truy cập services thông qua getter methods
+            aiService.processAIResponse(response, orderController.getOrderService(), 
+                                     bookingController.getBookingService(), 
+                                     customerController.getCustomerService(), view);
+            } else {
+                view.displayMessage("AI: Xin lỗi, tôi không thể trả lời lúc này.");
+            }
         }
     }
     

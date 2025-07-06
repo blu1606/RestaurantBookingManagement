@@ -1,7 +1,7 @@
 [
   {
     "type": "greeting",
-    "content": "Xin chào! Tôi là trợ lý AI của nhà hàng Việt Nam. Tôi có thể giúp bạn đặt bàn, xem menu, hoặc cung cấp thông tin về nhà hàng."
+    "content": "Xin chào! Tôi là trợ lý AI của nhà hàng Blue. Tôi có thể giúp bạn đặt bàn, xem menu, hoặc cung cấp thông tin về nhà hàng."
   },
   {
     "type": "greeting",
@@ -9,11 +9,11 @@
   },
   {
     "type": "introduction",
-    "content": "Nhà hàng Việt Nam chúng tôi chuyên phục vụ các món ăn truyền thống Việt Nam với hương vị đích thực. Chúng tôi có các món từ phở, bún, cơm tấm đến các món đặc biệt."
+    "content": "Nhà hàng Blue chúng tôi chuyên phục vụ các món ăn truyền thống Việt Nam với hương vị đích thực. Chúng tôi có các món từ phở, bún, cơm tấm đến các món đặc biệt."
   },
   {
     "type": "introduction",
-    "content": "Chúng tôi là nhà hàng Việt Nam với không gian ấm cúng, phù hợp cho các bữa tiệc gia đình, hẹn hò lãng mạn, hoặc tiệc tùng cùng bạn bè."
+    "content": "Chúng tôi là nhà hàng Blue với không gian ấm cúng, phù hợp cho các bữa tiệc gia đình, hẹn hò lãng mạn, hoặc tiệc tùng cùng bạn bè."
   },
   {
     "type": "service",

@@ -21,6 +21,7 @@ class Intent(Enum):
     CANCELLATION_MODIFICATION = "cancellation_modification"
     RESTAURANT_INFO = "restaurant_info"
     FEEDBACK = "feedback"
+    MANAGEMENT = "management"
     FALLBACK = "fallback"
 
 class RouterAI:
@@ -76,6 +77,14 @@ class RouterAI:
                     "Cảm ơn bạn", "Tôi muốn đóng góp ý kiến"
                 ]
             },
+            Intent.MANAGEMENT.value: {
+                "description": "Người dùng thực hiện các tác vụ quản lý nhà hàng như thêm/xóa/cập nhật menu, bàn, khách hàng, đơn hàng.",
+                "examples": [
+                    "Thêm món phở bò giá 50000 vào menu", "Xóa món có ID 3", "Cập nhật giá món ăn",
+                    "Thêm bàn 6 người", "Xóa bàn 3", "Tạo khách hàng mới", "Xem doanh thu",
+                    "Hoàn thành đơn hàng 5", "Tính tiền cho booking 10", "Hủy đặt bàn 8"
+                ]
+            },
             Intent.FALLBACK.value: {
                 "description": "Người dùng hỏi những câu không liên quan, không rõ ràng hoặc không thuộc các intent trên.",
                 "examples": [
@@ -93,6 +102,7 @@ class RouterAI:
             Intent.CANCELLATION_MODIFICATION: "CancellationAgent",
             Intent.RESTAURANT_INFO: "InformationAgent",
             Intent.FEEDBACK: "FeedbackAgent",
+            Intent.MANAGEMENT: "OrderAgent",
             Intent.FALLBACK: "FallbackAgent"
         }
     
@@ -116,7 +126,7 @@ class RouterAI:
         prompt_parts.extend([
             "Nhiệm vụ của bạn là phân loại ý định chính xác nhất cho câu hỏi của người dùng.",
             "QUY TẮC QUAN TRỌNG:",
-            "1. Chỉ trả về tên intent (GREETING, BOOKING, MENU_RECOMMENDATION, CANCELLATION_MODIFICATION, RESTAURANT_INFO, FEEDBACK, FALLBACK)",
+            "1. Chỉ trả về tên intent (GREETING, BOOKING, MENU_RECOMMENDATION, CANCELLATION_MODIFICATION, RESTAURANT_INFO, FEEDBACK, MANAGEMENT, FALLBACK)",
             "2. KHÔNG thêm dấu ngoặc kép, dấu chấm, hoặc bất kỳ ký tự nào khác",
             "3. KHÔNG viết hoa toàn bộ nếu không phải tên intent",
             "4. Nếu không chắc chắn hoặc câu hỏi không phù hợp, trả về FALLBACK",

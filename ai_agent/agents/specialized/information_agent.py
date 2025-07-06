@@ -17,8 +17,9 @@ class InformationAgent(BaseAgent):
     def __init__(self, gemini_model=None):
         super().__init__(
             agent_name="InformationAgent",
-            data_files=["tables.json", "menu_items.json", "customers.json"],
-            gemini_model=gemini_model
+            data_files=["tables.json", "menu_items.json", "customers.json", "knowledge/information_knowledge.json"],
+            gemini_model=gemini_model,
+            service_type="CustomerService"  # Chỉ xử lý CustomerService tools
         )
     
     def get_system_prompt(self) -> str:
@@ -30,6 +31,8 @@ class InformationAgent(BaseAgent):
         3. Hướng dẫn đường đi và phương tiện di chuyển
         4. Trả lời các câu hỏi về không gian, trang thiết bị
         5. Cung cấp thông tin về sự kiện đặc biệt hoặc khuyến mãi
+        6. Quản lý khách hàng: tạo, cập nhật, xóa thông tin khách hàng
+        7. Tìm kiếm và xem thông tin chi tiết khách hàng
         
         Luôn cung cấp thông tin chính xác và hữu ích cho khách hàng.
         """
@@ -96,6 +99,15 @@ class InformationAgent(BaseAgent):
                 "route": "hướng dẫn đường đi"
             }},
             "naturalResponse": "Câu trả lời hướng dẫn đường đi"
+        }}
+        
+        Nếu khách hàng muốn tìm kiếm khách hàng (quản lý):
+        {{
+            "action": "customer_search",
+            "parameters": {{
+                "searchTerm": "từ khóa tìm kiếm (tên hoặc số điện thoại)"
+            }},
+            "naturalResponse": "Câu trả lời kết quả tìm kiếm khách hàng"
         }}
         """
         

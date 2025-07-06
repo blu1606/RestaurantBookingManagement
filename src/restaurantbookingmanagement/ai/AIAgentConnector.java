@@ -112,28 +112,41 @@ public class AIAgentConnector {
                 JsonObject paramsObj = jsonObject.getAsJsonObject("parameters");
                 
                 // Parse guests
-                if (paramsObj.has("guests")) {
-                    parameters.put("guests", paramsObj.get("guests").getAsInt());
+                if (paramsObj.has("guests") && !paramsObj.get("guests").isJsonNull()) {
+                    JsonElement guestsElement = paramsObj.get("guests");
+                    if (guestsElement.isJsonPrimitive()) {
+                        try {
+                            parameters.put("guests", guestsElement.getAsInt());
+                        } catch (Exception e) {
+                            // If not an integer, try as string
+                            parameters.put("guests", guestsElement.getAsString());
+                        }
+                    }
                 }
                 
                 // Parse time
-                if (paramsObj.has("time")) {
+                if (paramsObj.has("time") && !paramsObj.get("time").isJsonNull()) {
                     parameters.put("time", paramsObj.get("time").getAsString());
                 }
                 
                 // Parse customerName
-                if (paramsObj.has("customerName")) {
+                if (paramsObj.has("customerName") && !paramsObj.get("customerName").isJsonNull()) {
                     parameters.put("customerName", paramsObj.get("customerName").getAsString());
                 }
                 
                 // Parse customerPhone
-                if (paramsObj.has("customerPhone")) {
+                if (paramsObj.has("customerPhone") && !paramsObj.get("customerPhone").isJsonNull()) {
                     parameters.put("customerPhone", paramsObj.get("customerPhone").getAsString());
                 }
                 
                 // Parse bookingId
-                if (paramsObj.has("bookingId")) {
-                    parameters.put("bookingId", paramsObj.get("bookingId").getAsInt());
+                if (paramsObj.has("bookingId") && !paramsObj.get("bookingId").isJsonNull()) {
+                    try {
+                        parameters.put("bookingId", paramsObj.get("bookingId").getAsInt());
+                    } catch (Exception e) {
+                        // If not an integer, try as string
+                        parameters.put("bookingId", paramsObj.get("bookingId").getAsString());
+                    }
                 }
                 
                 // Parse dishes/items
@@ -200,36 +213,68 @@ public class AIAgentConnector {
                 }
                 
                 // Parse menu item parameters (for add_menu action)
-                if (paramsObj.has("name")) {
+                if (paramsObj.has("name") && !paramsObj.get("name").isJsonNull()) {
                     parameters.put("name", paramsObj.get("name").getAsString());
                 }
                 
-                if (paramsObj.has("price")) {
-                    parameters.put("price", paramsObj.get("price").getAsDouble());
+                if (paramsObj.has("price") && !paramsObj.get("price").isJsonNull()) {
+                    try {
+                        parameters.put("price", paramsObj.get("price").getAsDouble());
+                    } catch (Exception e) {
+                        // If not a double, try as string
+                        parameters.put("price", paramsObj.get("price").getAsString());
+                    }
                 }
                 
-                if (paramsObj.has("description")) {
+                if (paramsObj.has("description") && !paramsObj.get("description").isJsonNull()) {
                     parameters.put("description", paramsObj.get("description").getAsString());
                 }
                 
                 // Parse menu item ID (for delete_menu action)
-                if (paramsObj.has("itemId")) {
-                    parameters.put("itemId", paramsObj.get("itemId").getAsInt());
+                if (paramsObj.has("itemId") && !paramsObj.get("itemId").isJsonNull()) {
+                    try {
+                        parameters.put("itemId", paramsObj.get("itemId").getAsInt());
+                    } catch (Exception e) {
+                        // If not an integer, try as string
+                        parameters.put("itemId", paramsObj.get("itemId").getAsString());
+                    }
                 }
                 
                 // Parse table capacity (for add_table action)
-                if (paramsObj.has("capacity")) {
-                    parameters.put("capacity", paramsObj.get("capacity").getAsInt());
+                if (paramsObj.has("capacity") && !paramsObj.get("capacity").isJsonNull()) {
+                    try {
+                        parameters.put("capacity", paramsObj.get("capacity").getAsInt());
+                    } catch (Exception e) {
+                        // If not an integer, try as string
+                        parameters.put("capacity", paramsObj.get("capacity").getAsString());
+                    }
                 }
                 
                 // Parse search term (for customer_search action)
-                if (paramsObj.has("searchTerm")) {
+                if (paramsObj.has("searchTerm") && !paramsObj.get("searchTerm").isJsonNull()) {
                     parameters.put("searchTerm", paramsObj.get("searchTerm").getAsString());
+                }
+                
+                // Parse date (for booking actions)
+                if (paramsObj.has("date") && !paramsObj.get("date").isJsonNull()) {
+                    parameters.put("date", paramsObj.get("date").getAsString());
+                }
+                
+                // Parse requiresJavaService flag
+                if (jsonObject.has("requiresJavaService")) {
+                    parameters.put("requiresJavaService", jsonObject.get("requiresJavaService").getAsBoolean());
+                }
+                
+                // Parse javaServiceType
+                if (jsonObject.has("javaServiceType")) {
+                    parameters.put("javaServiceType", jsonObject.get("javaServiceType").getAsString());
                 }
             }
             
             DebugUtil.debugPrint("🔍 DEBUG - Parsed AI Response:");
             DebugUtil.debugPrint("   - Action: " + action);
+            DebugUtil.debugPrint("   - NaturalResponse: " + naturalResponse);
+            DebugUtil.debugPrint("   - Parameters size: " + parameters.size());
             DebugUtil.debugPrint("   - CustomerName: " + parameters.get("customerName"));
             DebugUtil.debugPrint("   - CustomerPhone: " + parameters.get("customerPhone"));
             DebugUtil.debugPrint("   - Guests: " + parameters.get("guests"));
@@ -241,6 +286,8 @@ public class AIAgentConnector {
             DebugUtil.debugPrint("   - TableCapacity: " + parameters.get("capacity"));
             DebugUtil.debugPrint("   - SearchTerm: " + parameters.get("searchTerm"));
             DebugUtil.debugPrint("   - BookingId: " + parameters.get("bookingId"));
+            DebugUtil.debugPrint("   - RequiresJavaService: " + parameters.get("requiresJavaService"));
+            DebugUtil.debugPrint("   - JavaServiceType: " + parameters.get("javaServiceType"));
             
             if ("order_food".equals(action)) {
                 boolean needCustomerInfo = false;

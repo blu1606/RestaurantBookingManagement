@@ -2,6 +2,7 @@ package restaurantbookingmanagement.ai;
 
 import java.util.List;
 import java.util.Map;
+import restaurantbookingmanagement.utils.DebugUtil;
 
 /**
  * Class đại diện cho phản hồi từ AI Agent
@@ -65,6 +66,14 @@ public class AIResponse {
     
     public boolean isShowMenuAction() {
         return "show_menu".equals(action);
+    }
+    
+    public boolean isShowAvailableTablesAction() {
+        return "show_available_tables".equals(action);
+    }
+    
+    public boolean isShowAllTablesAction() {
+        return "show_all_tables".equals(action);
     }
     
     public boolean isShowTablesAction() {
@@ -248,8 +257,128 @@ public class AIResponse {
         return null;
     }
     
+    public String getCustomerEmail() {
+        if (parameters != null && parameters.containsKey("email")) {
+            return (String) parameters.get("email");
+        }
+        return null;
+    }
+    
+    public Integer getCustomerId() {
+        if (parameters != null && parameters.containsKey("customerId")) {
+            Object customerId = parameters.get("customerId");
+            if (customerId instanceof Integer) {
+                return (Integer) customerId;
+            } else if (customerId instanceof String) {
+                try {
+                    return Integer.parseInt((String) customerId);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+    
+    public Integer getOrderId() {
+        if (parameters != null && parameters.containsKey("orderId")) {
+            Object orderId = parameters.get("orderId");
+            if (orderId instanceof Integer) {
+                return (Integer) orderId;
+            } else if (orderId instanceof String) {
+                try {
+                    return Integer.parseInt((String) orderId);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+    
+    public String getItemName() {
+        if (parameters != null && parameters.containsKey("itemName")) {
+            return (String) parameters.get("itemName");
+        }
+        return null;
+    }
+    
+    public Integer getQuantity() {
+        if (parameters != null && parameters.containsKey("quantity")) {
+            Object quantity = parameters.get("quantity");
+            if (quantity instanceof Integer) {
+                return (Integer) quantity;
+            } else if (quantity instanceof String) {
+                try {
+                    return Integer.parseInt((String) quantity);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+    
+    public Integer getTableId() {
+        if (parameters != null && parameters.containsKey("tableId")) {
+            Object tableId = parameters.get("tableId");
+            if (tableId instanceof Integer) {
+                return (Integer) tableId;
+            } else if (tableId instanceof String) {
+                try {
+                    return Integer.parseInt((String) tableId);
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        }
+        return null;
+    }
+    
+    public String getTableStatus() {
+        if (parameters != null && parameters.containsKey("status")) {
+            return (String) parameters.get("status");
+        }
+        return null;
+    }
+    
+    public String getSearchKeyword() {
+        if (parameters != null && parameters.containsKey("keyword")) {
+            return (String) parameters.get("keyword");
+        }
+        return null;
+    }
+    
     public boolean isCalculateBillAction() {
         return "calculate_bill".equals(action);
+    }
+    
+    // Java Service Integration methods
+    public boolean requiresJavaService() {
+        if (parameters != null && parameters.containsKey("requiresJavaService")) {
+            Object requires = parameters.get("requiresJavaService");
+            if (requires instanceof Boolean) {
+                return (Boolean) requires;
+            } else if (requires instanceof String) {
+                return Boolean.parseBoolean((String) requires);
+            }
+        }
+        return false;
+    }
+    
+    public String getJavaServiceType() {
+        if (parameters != null && parameters.containsKey("javaServiceType")) {
+            return (String) parameters.get("javaServiceType");
+        }
+        return null;
+    }
+    
+    public boolean isJavaServiceAction() {
+        boolean result = requiresJavaService() && getJavaServiceType() != null && !getJavaServiceType().isEmpty();
+        DebugUtil.debugPrint("🔍 DEBUG - isJavaServiceAction: " + result);
+        DebugUtil.debugPrint("   - requiresJavaService: " + requiresJavaService());
+        DebugUtil.debugPrint("   - javaServiceType: " + getJavaServiceType());
+        return result;
     }
     
     @Override

@@ -23,7 +23,7 @@ if not exist ".temp" mkdir .temp
 
 REM Compile vào thư mục temp ẩn
 echo Compiling to temporary directory...
-javac -cp "lib/*" -d .temp src/restaurantbookingmanagement/*.java src/restaurantbookingmanagement/ai/*.java src/restaurantbookingmanagement/controller/*.java src/restaurantbookingmanagement/model/*.java src/restaurantbookingmanagement/service/*.java src/restaurantbookingmanagement/view/*.java src/restaurantbookingmanagement/utils/*.java
+javac -cp "lib/*" -d .temp -sourcepath src src/restaurantbookingmanagement/*.java src/restaurantbookingmanagement/ai/*.java src/restaurantbookingmanagement/controller/*.java src/restaurantbookingmanagement/model/*.java src/restaurantbookingmanagement/service/*.java src/restaurantbookingmanagement/view/*.java src/restaurantbookingmanagement/utils/*.java
 if errorlevel 1 (
     echo ERROR: Compilation failed
     rmdir /s /q .temp

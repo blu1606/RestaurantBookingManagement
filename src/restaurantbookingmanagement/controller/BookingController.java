@@ -220,4 +220,11 @@ public class BookingController {
             return getIntWithCancel(message);
         }
     }
+    
+    /**
+     * Getter cho BookingService
+     */
+    public BookingService getBookingService() {
+        return bookingService;
+    }
 } 

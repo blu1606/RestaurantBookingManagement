@@ -19,7 +19,7 @@ class FallbackAgent(BaseAgent):
     
     def get_system_prompt(self) -> str:
         return """
-        Bạn là trợ lý AI tổng quát của nhà hàng Việt Nam.
+        Bạn là trợ lý AI tổng quát của nhà hàng Blue.
         Nhiệm vụ chính của bạn là:
         1. Xử lý các yêu cầu không xác định hoặc phức tạp
         2. Lịch sự xin lỗi khi không hiểu rõ yêu cầu

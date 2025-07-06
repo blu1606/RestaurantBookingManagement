@@ -29,10 +29,18 @@ class CancellationAgent(BaseAgent):
         """
     
     def process_request(self, user_input: str, session_id: str = "default", chat_session=None) -> Dict[str, Any]:
-        # Lấy context từ knowledge base
+        # 1. Check if user_input matches any tool
+        tool = self.detect_tool_from_prompt(user_input)
+        if tool:
+            # Extract parameters (simple: just return empty or all None, real use: NLP extract)
+            parameters = {param: None for param in tool.get("parameters", [])}
+            return self.create_response(
+                action=tool["name"],
+                parameters=parameters,
+                natural_response=f"Tôi sẽ thực hiện tác vụ: {tool['description']} (service: {tool['service']})"
+            )
+        # 2. Fallback: Lấy context từ knowledge base
         context = self._get_relevant_context(user_input)
-        
-        # Tạo prompt cho Gemini
         prompt = f"""
         {self.get_system_prompt()}
         
@@ -41,59 +49,14 @@ class CancellationAgent(BaseAgent):
         
         Yêu cầu của khách hàng: {user_input}
         
-        Hãy phân tích yêu cầu và trả về JSON với format phù hợp:
-        
-        Nếu khách hàng muốn hủy đặt bàn:
-        {{
-            "action": "cancel_booking",
-            "parameters": {{
-                "bookingId": "mã đặt bàn",
-                "reason": "lý do hủy nếu có"
-            }},
-            "naturalResponse": "Câu trả lời xác nhận hủy đặt bàn"
-        }}
-        
-        Nếu khách hàng muốn thay đổi đặt bàn:
-        {{
-            "action": "modify_booking",
-            "parameters": {{
-                "bookingId": "mã đặt bàn",
-                "newDateTime": "thời gian mới",
-                "newGuests": "số người mới",
-                "changes": "thay đổi cụ thể"
-            }},
-            "naturalResponse": "Câu trả lời xác nhận thay đổi đặt bàn"
-        }}
-        
-        Nếu khách hàng cần thông tin về chính sách:
-        {{
-            "action": "booking_policy",
-            "parameters": {{
-                "policyType": "loại chính sách"
-            }},
-            "naturalResponse": "Câu trả lời về chính sách"
-        }}
-        
-        Nếu khách hàng cần tìm đặt bàn:
-        {{
-            "action": "find_booking",
-            "parameters": {{
-                "searchBy": "tìm theo tên/số điện thoại/mã đặt bàn"
-            }},
-            "naturalResponse": "Câu trả lời hướng dẫn tìm đặt bàn"
-        }}
+        Hãy trả lời một cách thân thiện và hữu ích.
         """
-        
-        # Gọi Gemini với chat_session
         response_text = self._call_gemini(prompt, chat_session=chat_session)
-        
-        # Parse JSON response with improved error handling
         response_data = self._parse_json_response(
             response_text,
             fallback_action="booking_policy",
             fallback_response="Tôi sẽ giúp bạn hủy hoặc thay đổi đặt bàn. Bạn có thể cho tôi biết mã đặt bàn không?"
         )
-        
         return self.create_response(
             action=response_data.get("action", "booking_policy"),
             parameters=response_data.get("parameters", {}),

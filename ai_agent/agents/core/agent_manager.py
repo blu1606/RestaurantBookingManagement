@@ -9,6 +9,7 @@ from ..specialized.cancellation_agent import CancellationAgent
 from ..specialized.information_agent import InformationAgent
 from ..specialized.feedback_agent import FeedbackAgent
 from ..specialized.fallback_agent import FallbackAgent
+from ..specialized.order_agent import OrderAgent
 
 class AgentManager:
     """
@@ -37,6 +38,7 @@ class AgentManager:
                 "CancellationAgent": CancellationAgent(self.gemini_model),
                 "InformationAgent": InformationAgent(self.gemini_model),
                 "FeedbackAgent": FeedbackAgent(self.gemini_model),
+                "OrderAgent": OrderAgent(self.gemini_model),
                 "FallbackAgent": FallbackAgent(self.gemini_model)
             }
             print("✅ All AI Agents initialized successfully")
