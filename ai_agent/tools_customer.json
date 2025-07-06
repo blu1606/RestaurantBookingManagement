@@ -1,0 +1,86 @@
+[
+  {
+    "name": "add_item_to_order",
+    "description": "Thêm món vào đơn hàng",
+    "parameters": ["orderId", "itemName", "quantity"],
+    "service": "OrderService",
+    "example_user_prompt": "Thêm 2 phở bò vào đơn hàng 5"
+  },
+  {
+    "name": "remove_item_from_order",
+    "description": "Xóa món khỏi đơn hàng",
+    "parameters": ["orderId", "itemName"],
+    "service": "OrderService",
+    "example_user_prompt": "Xóa phở bò khỏi đơn hàng 5"
+  },
+  {
+    "name": "complete_order",
+    "description": "Hoàn thành đơn hàng (thanh toán)",
+    "parameters": ["orderId"],
+    "service": "OrderService",
+    "example_user_prompt": "Hoàn thành đơn hàng 5"
+  },
+  {
+    "name": "calculate_bill",
+    "description": "Tính tiền cho booking",
+    "parameters": ["bookingId"],
+    "service": "OrderService",
+    "example_user_prompt": "Tính tiền cho booking 10"
+  },
+  {
+    "name": "show_available_tables",
+    "description": "Hiển thị danh sách các bàn còn trống, chưa có ai đặt",
+    "parameters": [],
+    "service": "BookingService",
+    "example_user_prompt": "Xem các bàn còn trống, chưa có ai đặt"
+  },
+  {
+    "name": "show_all_tables",
+    "description": "Hiển thị tất cả bàn trong nhà hàng và trạng thái của chúng",
+    "parameters": [],
+    "service": "BookingService",
+    "example_user_prompt": "Xem tất cả bàn trong nhà hàng"
+  },
+  {
+    "name": "create_booking",
+    "description": "Tạo đặt bàn mới cho khách hàng",
+    "parameters": ["customerName", "customerPhone", "guests", "dateTime"],
+    "service": "BookingService",
+    "example_user_prompt": "Đặt bàn cho Nam 0988888888 4 người vào tối nay"
+  },
+  {
+    "name": "cancel_booking",
+    "description": "Hủy đặt bàn",
+    "parameters": ["bookingId"],
+    "service": "BookingService",
+    "example_user_prompt": "Hủy đặt bàn 10"
+  },
+  {
+    "name": "complete_booking",
+    "description": "Hoàn thành đặt bàn",
+    "parameters": ["bookingId"],
+    "service": "BookingService",
+    "example_user_prompt": "Hoàn thành đặt bàn 10"
+  },
+  {
+    "name": "update_booking",
+    "description": "Cập nhật thông tin đặt bàn đã có",
+    "parameters": ["bookingId", "guests", "dateTime"],
+    "service": "BookingService",
+    "example_user_prompt": "Cập nhật đặt bàn 10 thành 6 người"
+  },
+  {
+    "name": "delete_booking",
+    "description": "Xóa đặt bàn theo ID",
+    "parameters": ["bookingId"],
+    "service": "BookingService",
+    "example_user_prompt": "Xóa đặt bàn có ID 10"
+  },
+  {
+    "name": "show_menu",
+    "description": "Hiển thị toàn bộ menu nhà hàng",
+    "parameters": [],
+    "service": "OrderService",
+    "example_user_prompt": "Cho tôi xem menu"
+  }
+] 

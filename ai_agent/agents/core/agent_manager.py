@@ -33,19 +33,19 @@ class AgentManager:
         try:
             self.agents = {
                 "GreetingAgent": GreetingAgent(self.gemini_model),
-                "MenuAgent": MenuAgent(self.gemini_model),
-                "BookingAgent": BookingAgent(self.gemini_model),
-                "CancellationAgent": CancellationAgent(self.gemini_model),
+                "MenuAgent": MenuAgent(self.gemini_model, user_role="user"),
+                "BookingAgent": BookingAgent(self.gemini_model, user_role="user"),
+                "CancellationAgent": CancellationAgent(self.gemini_model, user_role="user"),
                 "InformationAgent": InformationAgent(self.gemini_model),
                 "FeedbackAgent": FeedbackAgent(self.gemini_model),
-                "OrderAgent": OrderAgent(self.gemini_model),
+                "OrderAgent": OrderAgent(self.gemini_model, user_role="user"),
                 "FallbackAgent": FallbackAgent(self.gemini_model)
             }
             print("✅ All AI Agents initialized successfully")
         except Exception as e:
             print(f"🔥 Error initializing agents: {e}")
     
-    def process_user_input(self, user_input: str, session_id: str = "default", role: str = "USER") -> Dict[str, Any]:
+    def process_user_input(self, user_input: str, session_id: str = "default", role: str = "user") -> Dict[str, Any]:
         """
         Xử lý input của user thông qua Router AI và các Agent chuyên biệt
         """
@@ -75,17 +75,35 @@ class AgentManager:
                 print(f"⚠️ Agent {agent_name} not found, using FallbackAgent")
                 agent = self.agents.get("FallbackAgent")
             
-            # 3. Xử lý yêu cầu bằng agent chuyên biệt, truyền chat_session
+            # 3. Cập nhật role cho agent nếu cần
+            if hasattr(agent, 'user_role') and role != agent.user_role:
+                # Tạo agent mới với role mới
+                try:
+                    if agent_name == "BookingAgent":
+                        agent = BookingAgent(self.gemini_model, user_role=role)
+                    elif agent_name == "OrderAgent":
+                        agent = OrderAgent(self.gemini_model, user_role=role)
+                    elif agent_name == "CancellationAgent":
+                        agent = CancellationAgent(self.gemini_model, user_role=role)
+                    elif agent_name == "MenuAgent":
+                        agent = MenuAgent(self.gemini_model, user_role=role)
+                    # Cập nhật agent trong cache
+                    self.agents[agent_name] = agent
+                    print(f"🔄 Updated {agent_name} with role '{role}'")
+                except Exception as e:
+                    print(f"⚠️ Failed to update agent role: {e}")
+            
+            # 4. Xử lý yêu cầu bằng agent chuyên biệt, truyền chat_session
             response = agent.process_request(user_input, session_id, chat_session=current_chat_session)
             
-            # 4. Thêm thông tin routing vào response
+            # 5. Thêm thông tin routing vào response
             response["routing"] = {
                 "intent": intent,
                 "agent": agent_name,
                 "confidence": confidence_float
             }
             
-            # 5. Cập nhật conversation history
+            # 6. Cập nhật conversation history
             self._update_conversation_history(session_id, user_input, response)
             
             return response

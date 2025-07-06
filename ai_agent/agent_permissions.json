@@ -1,0 +1,87 @@
+{
+  "agents": {
+    "BookingAgent": {
+      "description": "Agent xử lý đặt bàn và xem thông tin bàn",
+      "allowed_tools": [
+        "create_booking",
+        "show_available_tables",
+        "show_all_tables"
+      ],
+      "default_role": "user"
+    },
+    "OrderAgent": {
+      "description": "Agent xử lý đơn hàng và thanh toán",
+      "allowed_tools": [
+        "add_item_to_order",
+        "remove_item_from_order",
+        "complete_order",
+        "calculate_bill",
+        "show_menu"
+      ],
+      "default_role": "user"
+    },
+    "CancellationAgent": {
+      "description": "Agent xử lý hủy và cập nhật đặt bàn",
+      "allowed_tools": [
+        "cancel_booking",
+        "update_booking",
+        "delete_booking"
+      ],
+      "default_role": "user"
+    },
+    "MenuAgent": {
+      "description": "Agent tư vấn menu và gợi ý món ăn",
+      "allowed_tools": [
+        "show_menu"
+      ],
+      "default_role": "user"
+    }
+  },
+  "roles": {
+    "user": {
+      "description": "Khách hàng thông thường",
+      "permissions": [
+        "create_booking",
+        "cancel_booking",
+        "update_booking",
+        "add_item_to_order",
+        "remove_item_from_order",
+        "calculate_bill",
+        "show_menu",
+        "show_available_tables"
+      ]
+    },
+    "staff": {
+      "description": "Nhân viên nhà hàng",
+      "permissions": [
+        "create_booking",
+        "cancel_booking",
+        "update_booking",
+        "delete_booking",
+        "add_item_to_order",
+        "remove_item_from_order",
+        "complete_order",
+        "calculate_bill",
+        "show_menu",
+        "show_available_tables",
+        "show_all_tables"
+      ]
+    },
+    "admin": {
+      "description": "Quản lý nhà hàng",
+      "permissions": [
+        "create_booking",
+        "cancel_booking",
+        "update_booking",
+        "delete_booking",
+        "add_item_to_order",
+        "remove_item_from_order",
+        "complete_order",
+        "calculate_bill",
+        "show_menu",
+        "show_available_tables",
+        "show_all_tables"
+      ]
+    }
+  }
+} 

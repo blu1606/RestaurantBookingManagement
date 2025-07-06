@@ -53,7 +53,7 @@ def process_user_input():
 
         user_input = data['userInput']
         session_id = data.get('sessionId', 'default')
-        role = data.get('role', 'USER')
+        role = data.get('role', 'user').lower()
         
         print(f"➡️ Received input from session {session_id} (Role: {role}): {user_input}")
 

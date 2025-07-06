@@ -14,17 +14,18 @@ class MenuAgent(BaseAgent):
     AI Agent chuyên xử lý gợi ý món ăn và thông tin menu
     """
     
-    def __init__(self, gemini_model=None):
+    def __init__(self, gemini_model=None, user_role: str = "user"):
         super().__init__(
             agent_name="MenuAgent",
             data_files=["menu_items.json"],
             gemini_model=gemini_model,
-            service_type=None  # Không filter theo service, chỉ dùng show_menu
+            user_role=user_role
         )
     
     def get_system_prompt(self) -> str:
         return """
         Bạn là nhân viên tư vấn menu chuyên nghiệp của nhà hàng Việt Nam.
+        
         Nhiệm vụ chính của bạn là:
         1. Gợi ý món ăn phù hợp với sở thích và nhu cầu khách hàng
         2. Cung cấp thông tin chi tiết về món ăn (nguyên liệu, cách chế biến, giá cả)
@@ -32,6 +33,13 @@ class MenuAgent(BaseAgent):
         4. Giới thiệu các món đặc sản và món phổ biến
         5. Tư vấn món ăn theo tầm giá và số lượng người
         6. Chỉ sử dụng tool show_menu khi khách hàng yêu cầu xem toàn bộ menu
+        
+        QUAN TRỌNG: 
+        - Chỉ sử dụng thông tin từ menu thực tế được cung cấp
+        - KHÔNG được bịa thêm thông tin món ăn, giá cả hoặc mô tả không có trong data
+        - Đưa ra gợi ý cụ thể với ID món ăn, tên món, giá và mô tả chính xác từ menu
+        - Luôn đề cập đến ID món ăn (itemId) khi giới thiệu món
+        - Nếu không có thông tin trong menu, hãy nói rõ là không có thông tin
         
         Luôn đảm bảo thông tin chính xác và tư vấn nhiệt tình.
         """
@@ -48,37 +56,58 @@ class MenuAgent(BaseAgent):
                 natural_response=f"Tôi sẽ thực hiện tác vụ: {tool['description']} (service: {tool['service']})"
             )
         
-        # 2. Fallback: Lấy context từ knowledge base (menu items) và trả lời tự nhiên
+        # 2. Lấy context từ knowledge base (menu items) và trả lời tự nhiên
         context = self._get_relevant_context(user_input)
+        
+        # Luôn đảm bảo có thông tin menu thực tế
+        try:
+            with open("data/menu_items.json", "r", encoding="utf-8") as f:
+                menu_data = json.load(f)
+            
+            # Format menu data một cách rõ ràng với itemId
+            menu_context = "MENU THỰC TẾ CỦA NHÀ HÀNG:\n" + "\n".join([
+                f"🍽️ ID:{item['itemId']} - {item['name']}: {item['price']:,} VND - {item['description']}"
+                for item in menu_data
+            ])
+            
+            # Kết hợp context từ vector search với menu thực tế
+            if context and context != "Không có thông tin bổ sung.":
+                context = f"{menu_context}\n\nThông tin bổ sung:\n{context}"
+            else:
+                context = menu_context
+                
+        except Exception as e:
+            context = "Không thể tải thông tin menu."
+        
         prompt = f"""
         {self.get_system_prompt()}
         
-        Thông tin về menu nhà hàng:
+        THÔNG TIN MENU THỰC TẾ CỦA NHÀ HÀNG:
         {context}
         
         Yêu cầu của khách hàng: {user_input}
         
-        Hãy trả lời một cách thân thiện và hữu ích. Nếu khách hàng hỏi về:
-        - Gợi ý món ăn: Đưa ra gợi ý dựa trên menu, giải thích tại sao phù hợp
-        - Món phổ biến: Liệt kê các món được ưa chuộng với lý do
-        - Món theo giá: Gợi ý món theo tầm giá (dưới 50k, 50k-100k, trên 100k)
-        - Món theo loại: Phân loại món (chính, tráng miệng, đồ uống) với mô tả
-        - Thông tin món: Mô tả chi tiết về món ăn, nguyên liệu, cách chế biến
-        - Món đặc sản: Giới thiệu các món đặc trưng của nhà hàng
-        - Món theo số người: Tư vấn món phù hợp theo số lượng khách
+        QUAN TRỌNG: Chỉ sử dụng thông tin từ menu thực tế được cung cấp ở trên. KHÔNG được bịa thêm thông tin món ăn, giá cả hoặc mô tả không có trong data.
         
-        Trả lời bằng tiếng Việt, thân thiện và chi tiết. Nếu cần xem toàn bộ menu, hãy gợi ý sử dụng tool show_menu.
+        Hãy phân tích yêu cầu và trả lời chi tiết dựa trên menu thực tế:
+        
+        - Nếu hỏi về món đặc sản: Chỉ giới thiệu các món có trong menu thực tế, bao gồm ID món ăn
+        - Nếu hỏi gợi ý món ăn: Đưa ra gợi ý cụ thể với ID món ăn, tên món, giá và mô tả từ menu thực tế
+        - Nếu hỏi món theo giá: Phân loại theo tầm giá dựa trên giá thực tế trong menu, bao gồm ID món ăn
+        - Nếu hỏi món theo loại: Phân loại món chính, đồ uống, tráng miệng dựa trên menu thực tế, bao gồm ID món ăn
+        - Nếu hỏi món phổ biến: Chỉ liệt kê các món có trong menu thực tế, bao gồm ID món ăn
+        
+        Trả lời bằng tiếng Việt, thân thiện và chi tiết. CHỈ sử dụng thông tin từ menu được cung cấp. LUÔN bao gồm ID món ăn khi giới thiệu món.
         """
+        
         response_text = self._call_gemini(prompt, chat_session=chat_session)
-        response_data = self._parse_json_response(
-            response_text,
-            fallback_action="menu_suggestion",
-            fallback_response="Tôi sẽ giúp bạn với thông tin menu. Bạn cần hỗ trợ gì?"
-        )
+        
+        # Luôn sử dụng response_text trực tiếp thay vì cố gắng parse JSON
+        # Vì AI có thể trả về text tự nhiên thay vì JSON
         return self.create_response(
-            action=response_data.get("action", "menu_suggestion"),
-            parameters=response_data.get("parameters", {}),
-            natural_response=response_data.get("naturalResponse", "Tôi sẽ giúp bạn với thông tin menu.")
+            action="menu_suggestion",
+            parameters={},
+            natural_response=response_text
         )
     
     def _detect_show_menu_tool(self, user_input: str) -> Optional[Dict[str, Any]]:
@@ -113,10 +142,21 @@ class MenuAgent(BaseAgent):
         Format menu knowledge item
         """
         if isinstance(item, dict):
-            if item.get("type") == "menu_item":
-                return f"Món: {item.get('name', '')} - Giá: {item.get('price', '')} VND - Mô tả: {item.get('description', '')}"
+            # Format cho menu items từ JSON
+            if "itemId" in item and "name" in item and "price" in item:
+                price = item.get("price", 0)
+                if isinstance(price, (int, float)):
+                    price_str = f"{price:,} VND"
+                else:
+                    price_str = str(price)
+                return f"🍽️ ID:{item.get('itemId', '')} - {item.get('name', '')} - {price_str} - {item.get('description', '')}"
+            
+            # Format cho các loại khác
+            elif item.get("type") == "menu_item":
+                return f"🍽️ {item.get('name', '')} - Giá: {item.get('price', '')} VND - {item.get('description', '')}"
             elif item.get("type") == "category":
-                return f"Danh mục: {item.get('name', '')} - {item.get('description', '')}"
+                return f"📂 {item.get('name', '')} - {item.get('description', '')}"
             elif item.get("type") == "special":
-                return f"Món đặc biệt: {item.get('name', '')} - {item.get('description', '')}"
+                return f"⭐ {item.get('name', '')} - {item.get('description', '')}"
+        
         return super()._format_knowledge_item(item) 

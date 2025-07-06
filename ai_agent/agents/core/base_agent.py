@@ -17,15 +17,20 @@ class BaseAgent(ABC):
     Base class cho tất cả AI Agent chuyên biệt
     """
     
-    def __init__(self, agent_name: str, data_files: list = None, gemini_model=None, service_type: str = None):
+    def __init__(self, agent_name: str, data_files: list = None, gemini_model=None, 
+                 service_type: str = None, allowed_tools: list = None, user_role: str = "user"):
         self.agent_name = agent_name
         self.data_files = data_files or []
         self.gemini_model = gemini_model
-        self.service_type = service_type  # Service type của agent này
+        self.service_type = service_type  # Giữ lại để backward compatibility
+        self.user_role = user_role  # Role của user (user, staff, admin)
         self.vector_db = None
         self.retriever = None
         self.knowledge_base = []
         self.rate_limiter = RateLimiter()
+        
+        # Load permissions trước
+        self._load_permissions()
         
         # Load tools trước
         self._load_tools()
@@ -36,18 +41,70 @@ class BaseAgent(ABC):
         # Build vector database
         self._build_vector_db()
     
-    def _load_tools(self):
+    def _load_permissions(self):
         """
-        Load tools từ file tools.json
+        Load permissions từ file agent_permissions.json
         """
         try:
-            tools_path = os.path.join(os.path.dirname(__file__), "..", "..", "tools.json")
+            permissions_path = os.path.join(os.path.dirname(__file__), "..", "..", "agent_permissions.json")
+            if not os.path.exists(permissions_path):
+                print(f"⚠️ {self.agent_name}: Permissions file not found, using default permissions")
+                self.allowed_tools = allowed_tools or []
+                return
+            
+            with open(permissions_path, 'r', encoding='utf-8') as f:
+                permissions_data = json.load(f)
+            
+            # Lấy permissions cho agent này
+            agent_permissions = permissions_data.get("agents", {}).get(self.agent_name, {})
+            self.allowed_tools = agent_permissions.get("allowed_tools", allowed_tools or [])
+            
+            # Lấy role permissions
+            role_permissions = permissions_data.get("roles", {}).get(self.user_role, {})
+            self.role_permissions = role_permissions.get("permissions", [])
+            
+            print(f"✅ {self.agent_name}: Loaded permissions for role '{self.user_role}'")
+            print(f"✅ {self.agent_name}: Allowed tools: {self.allowed_tools}")
+            
+        except Exception as e:
+            print(f"🔥 {self.agent_name}: Error loading permissions: {e}")
+            self.allowed_tools = allowed_tools or []
+            self.role_permissions = []
+    
+    def _load_tools(self):
+        """
+        Load tools từ file tools_customer.json (chỉ tools dành cho customer)
+        """
+        try:
+            # Ưu tiên sử dụng tools_customer.json
+            tools_path = os.path.join(os.path.dirname(__file__), "..", "..", "tools_customer.json")
+            if not os.path.exists(tools_path):
+                # Fallback về tools.json nếu không có file customer
+                tools_path = os.path.join(os.path.dirname(__file__), "..", "..", "tools.json")
+            
             with open(tools_path, 'r', encoding='utf-8') as f:
                 tools_data = json.load(f)
             
+            # Filter tools theo agent allowed_tools và role permissions
+            filtered_tools = []
+            for tool in tools_data:
+                # Kiểm tra agent allowed_tools
+                if self.allowed_tools and tool.get("name") not in self.allowed_tools:
+                    continue
+                
+                # Kiểm tra role permissions từ agent_permissions.json
+                if hasattr(self, 'role_permissions') and self.role_permissions:
+                    if tool.get("name") not in self.role_permissions:
+                        continue
+                
+                filtered_tools.append(tool)
+            
+            tools_data = filtered_tools
+            print(f"✅ {self.agent_name}: Filtered {len(filtered_tools)} tools for role '{self.user_role}' from {len(tools_data)} total tools")
+            
             # Sử dụng singleton ToolDetector
             self.tool_detector = ToolDetector.get_instance(tools_data)
-            print(f"✅ {self.agent_name}: Loaded {len(tools_data)} tools from tools.json")
+            print(f"✅ {self.agent_name}: Loaded {len(tools_data)} tools from {os.path.basename(tools_path)}")
         except Exception as e:
             print(f"🔥 {self.agent_name}: Error loading tools: {e}")
             self.tool_detector = None
@@ -302,18 +359,30 @@ class BaseAgent(ABC):
     def detect_tool_from_prompt(self, user_input: str) -> Optional[Dict[str, Any]]:
         """
         Detect if user_input matches any tool using semantic similarity
-        Chỉ xử lý tools thuộc service của agent này
+        Chỉ xử lý tools được phép sử dụng (permission-based)
         """
         if not self.tool_detector:
             return None
         
-        # Lọc tools theo service type của agent
-        if self.service_type:
-            available_tools = [tool for tool in self.tool_detector.tools if tool.get("service") == self.service_type]
-            print(f"🔍 {self.agent_name}: Checking {len(available_tools)} tools for service '{self.service_type}'")
-        else:
-            available_tools = self.tool_detector.tools
-            print(f"🔍 {self.agent_name}: Checking all {len(available_tools)} tools (no service filter)")
+        # Lọc tools theo agent allowed_tools và role permissions
+        available_tools = []
+        for tool in self.tool_detector.tools:
+            # Kiểm tra agent allowed_tools
+            if self.allowed_tools and tool.get("name") not in self.allowed_tools:
+                continue
+            
+            # Kiểm tra role permissions từ agent_permissions.json
+            if hasattr(self, 'role_permissions') and self.role_permissions:
+                if tool.get("name") not in self.role_permissions:
+                    continue
+            
+            available_tools.append(tool)
+        
+        print(f"🔍 {self.agent_name}: Checking {len(available_tools)} tools for role '{self.user_role}'")
+        if self.allowed_tools:
+            print(f"🔍 {self.agent_name}: Allowed tools: {self.allowed_tools}")
+        if hasattr(self, 'role_permissions') and self.role_permissions:
+            print(f"🔍 {self.agent_name}: Role permissions: {self.role_permissions}")
         
         # Tạo temporary tool detector với filtered tools
         temp_detector = ToolDetector(available_tools)

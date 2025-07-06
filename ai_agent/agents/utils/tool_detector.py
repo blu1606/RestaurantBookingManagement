@@ -113,6 +113,17 @@ class ToolDetector:
                     if tool_name.lower() in user_input.lower():
                         score += 0.1
                     
+                    # Ưu tiên create_booking khi không có bookingId
+                    if "booking" in tool_name.lower():
+                        if "create_booking" in tool_name.lower():
+                            # Nếu không có số ID trong input, ưu tiên create
+                            if not any(char.isdigit() for char in user_input):
+                                score += 0.2
+                        elif "update_booking" in tool_name.lower():
+                            # Nếu có số ID trong input, ưu tiên update
+                            if any(char.isdigit() for char in user_input):
+                                score += 0.2
+                    
                     # Thêm boost nhỏ cho các từ khóa chung
                     user_input_lower = user_input.lower()
                     if "xem" in user_input_lower or "hiển thị" in user_input_lower or "cho xem" in user_input_lower:
@@ -124,6 +135,19 @@ class ToolDetector:
                     elif "xóa" in user_input_lower:
                         if "delete" in tool_name.lower() or "xóa" in tool.get("description", "").lower():
                             score += 0.1
+                    elif "đặt bàn" in user_input_lower or "đặt" in user_input_lower:
+                        if "create_booking" in tool_name.lower():
+                            score += 0.3  # Boost cao hơn cho create_booking
+                        elif "update_booking" in tool_name.lower():
+                            # Chỉ boost update_booking nếu có từ khóa "cập nhật", "thay đổi", "sửa"
+                            if any(word in user_input_lower for word in ["cập nhật", "thay đổi", "sửa", "update"]):
+                                score += 0.2
+                    elif "hủy" in user_input_lower or "cancel" in user_input_lower:
+                        if "cancel" in tool_name.lower() or "hủy" in tool.get("description", "").lower():
+                            score += 0.15
+                    elif "hủy" in user_input_lower or "cancel" in user_input_lower:
+                        if "cancel" in tool_name.lower() or "hủy" in tool.get("description", "").lower():
+                            score += 0.15
                     
                     if score > best_score:
                         best_score = score
@@ -133,8 +157,8 @@ class ToolDetector:
                     print(f"🔥 ToolDetector: Error calculating similarity for {tool_name}: {e}")
                     continue
         
-        # Tăng ngưỡng confidence để tránh false positive
-        CONFIDENCE_THRESHOLD = 0.75  # Tăng từ 0.6 lên 0.75
+        # Giảm ngưỡng confidence để dễ detect hơn
+        CONFIDENCE_THRESHOLD = 0.6  # Giảm từ 0.75 xuống 0.6
         if best_match and best_score >= CONFIDENCE_THRESHOLD:
             best_match["confidence_score"] = float(f"{best_score:.3f}")
             print(f"🎯 ToolDetector: Matched '{user_input}' to '{best_match['name']}' (confidence: {best_score:.3f})")
