@@ -3,3 +3,26 @@
 .temp
 /ai_agent/venv
 .idea
+
+# Python cache and virtual environment
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.env
+# IDE and OS files
+.DS_Store
+Thumbs.db
+# Jupyter and IPython
+.ipynb_checkpoints/
+# VSCode
+.vscode/
+# Log files
+*.log
+# Backup files
+*~
+# Compiled Java class files
+*.class
+# NetBeans
+nbproject/private/

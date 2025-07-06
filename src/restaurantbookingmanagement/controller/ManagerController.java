@@ -1,7 +1,5 @@
 package restaurantbookingmanagement.controller;
 
-import restaurantbookingmanagement.model.*;
-import restaurantbookingmanagement.service.*;
 import restaurantbookingmanagement.view.*;
 import restaurantbookingmanagement.utils.DebugUtil;
 

@@ -1,0 +1,116 @@
+[
+  {
+    "type": "address",
+    "street": "123 Đường Nguyễn Huệ",
+    "district": "Quận 1",
+    "city": "TP. Hồ Chí Minh",
+    "fullAddress": "123 Đường Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh"
+  },
+  {
+    "type": "hours",
+    "open": "09:00",
+    "close": "22:00",
+    "days": "Thứ 2 - Chủ nhật",
+    "description": "Nhà hàng mở cửa từ 9 giờ sáng đến 10 giờ tối, 7 ngày trong tuần"
+  },
+  {
+    "type": "contact",
+    "phone": "0901234567",
+    "email": "info@restaurant.com",
+    "website": "www.restaurant.com",
+    "description": "Liên hệ qua điện thoại, email hoặc website"
+  },
+  {
+    "type": "service",
+    "name": "Đặt bàn trực tuyến",
+    "description": "Đặt bàn 24/7 qua website hoặc AI assistant"
+  },
+  {
+    "type": "service",
+    "name": "Giao hàng",
+    "description": "Giao hàng trong phạm vi 5km với phí giao hàng 20,000 VND"
+  },
+  {
+    "type": "service",
+    "name": "Tiệc tùng",
+    "description": "Tổ chức tiệc sinh nhật, tiệc công ty, tiệc cưới với sức chứa lên đến 100 người"
+  },
+  {
+    "type": "service",
+    "name": "Đặt món trước",
+    "description": "Đặt món trước cho bàn lớn hoặc tiệc tùng"
+  },
+  {
+    "type": "facility",
+    "name": "Bãi đỗ xe",
+    "description": "Có bãi đỗ xe miễn phí cho khách hàng"
+  },
+  {
+    "type": "facility",
+    "name": "WiFi",
+    "description": "WiFi miễn phí cho khách hàng"
+  },
+  {
+    "type": "facility",
+    "name": "Điều hòa",
+    "description": "Hệ thống điều hòa hiện đại, không gian thoáng mát"
+  },
+  {
+    "type": "facility",
+    "name": "Sân khấu",
+    "description": "Sân khấu nhỏ cho các sự kiện đặc biệt"
+  },
+  {
+    "type": "transportation",
+    "name": "Xe buýt",
+    "description": "Tuyến xe buýt số 1, 2, 3 dừng ngay trước nhà hàng"
+  },
+  {
+    "type": "transportation",
+    "name": "Taxi",
+    "description": "Dễ dàng gọi taxi từ các hãng taxi lớn"
+  },
+  {
+    "type": "transportation",
+    "name": "Grab",
+    "description": "Có thể đặt Grab để đến nhà hàng"
+  },
+  {
+    "type": "direction",
+    "from": "Trung tâm thành phố",
+    "route": "Đi theo đường Nguyễn Huệ về hướng Bến Nghé, nhà hàng nằm bên phải"
+  },
+  {
+    "type": "direction",
+    "from": "Sân bay Tân Sơn Nhất",
+    "route": "Đi taxi khoảng 30 phút, hoặc xe buýt tuyến 152"
+  },
+  {
+    "type": "landmark",
+    "name": "Bưu điện trung tâm",
+    "distance": "200m",
+    "direction": "Đối diện nhà hàng"
+  },
+  {
+    "type": "landmark",
+    "name": "Nhà hát lớn",
+    "distance": "500m",
+    "direction": "Đi bộ 5 phút về hướng Nam"
+  },
+  {
+    "type": "parking",
+    "name": "Miễn phí",
+    "capacity": "20 xe",
+    "description": "Bãi đỗ xe miễn phí cho khách hàng, có bảo vệ"
+  },
+  {
+    "type": "accessibility",
+    "feature": "Ramp cho xe lăn",
+    "description": "Có ramp dành cho người khuyết tật"
+  },
+  {
+    "type": "accessibility",
+    "feature": "Nhà vệ sinh cho người khuyết tật",
+    "description": "Nhà vệ sinh được thiết kế phù hợp cho người khuyết tật"
+  }
+] 

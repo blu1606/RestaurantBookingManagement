@@ -1,0 +1,82 @@
+[
+  {
+    "type": "general_info",
+    "title": "Về nhà hàng",
+    "content": "Chúng tôi là nhà hàng Việt Nam chuyên phục vụ các món ăn truyền thống với hương vị đích thực. Chúng tôi có thể giúp bạn đặt bàn, xem menu, hoặc cung cấp thông tin về nhà hàng."
+  },
+  {
+    "type": "general_info",
+    "title": "Dịch vụ chính",
+    "content": "Các dịch vụ chính của chúng tôi bao gồm: đặt bàn trực tuyến, gọi món, giao hàng, tổ chức tiệc tùng, và tư vấn menu."
+  },
+  {
+    "type": "service_scope",
+    "service": "Đặt bàn",
+    "description": "Hỗ trợ đặt bàn cho 2-8 người, đặt trước tối đa 30 ngày, hủy/thay đổi trước 2 giờ"
+  },
+  {
+    "type": "service_scope",
+    "service": "Gọi món",
+    "description": "Menu đa dạng các món Việt Nam truyền thống, giá từ 15,000 - 100,000 VND"
+  },
+  {
+    "type": "service_scope",
+    "service": "Thông tin",
+    "description": "Cung cấp thông tin về địa chỉ, giờ mở cửa, liên hệ, dịch vụ"
+  },
+  {
+    "type": "service_scope",
+    "service": "Phản hồi",
+    "description": "Tiếp nhận phản hồi, đánh giá, góp ý của khách hàng"
+  },
+  {
+    "type": "help_topic",
+    "topic": "Cách sử dụng AI assistant",
+    "content": "Bạn có thể hỏi tôi về: đặt bàn, xem menu, gọi món, thông tin nhà hàng, hoặc đưa ra phản hồi. Tôi sẽ cố gắng giúp bạn tốt nhất có thể."
+  },
+  {
+    "type": "help_topic",
+    "topic": "Các câu hỏi thường gặp",
+    "content": "Bạn có thể hỏi: 'Nhà hàng mở cửa đến mấy giờ?', 'Cho tôi xem menu', 'Tôi muốn đặt bàn', 'Món nào ngon nhất?'"
+  },
+  {
+    "type": "help_topic",
+    "topic": "Liên hệ hỗ trợ",
+    "content": "Nếu tôi không thể giúp bạn, bạn có thể liên hệ qua: số điện thoại 0901234567, email info@restaurant.com, hoặc đến trực tiếp nhà hàng."
+  },
+  {
+    "type": "out_of_scope",
+    "topic": "Các dịch vụ ngoài phạm vi",
+    "content": "Tôi chỉ có thể giúp bạn với các dịch vụ của nhà hàng như đặt bàn, gọi món, thông tin nhà hàng. Các vấn đề khác vui lòng liên hệ nhân viên."
+  },
+  {
+    "type": "clarification",
+    "topic": "Khi không hiểu yêu cầu",
+    "content": "Xin lỗi, tôi không hiểu rõ yêu cầu của bạn. Bạn có thể diễn đạt lại hoặc hỏi về đặt bàn, menu, thông tin nhà hàng không?"
+  },
+  {
+    "type": "redirect",
+    "topic": "Chuyển hướng",
+    "content": "Tôi sẽ chuyển yêu cầu của bạn đến nhân viên phù hợp để được hỗ trợ tốt nhất."
+  },
+  {
+    "type": "error_handling",
+    "topic": "Xử lý lỗi",
+    "content": "Nếu có lỗi xảy ra, vui lòng thử lại sau hoặc liên hệ nhân viên để được hỗ trợ."
+  },
+  {
+    "type": "fallback_response",
+    "category": "general",
+    "content": "Xin lỗi, tôi không hiểu rõ yêu cầu của bạn. Bạn có thể hỏi về đặt bàn, xem menu, thông tin nhà hàng, hoặc đưa ra phản hồi không?"
+  },
+  {
+    "type": "fallback_response",
+    "category": "technical",
+    "content": "Có vẻ như có vấn đề kỹ thuật. Vui lòng thử lại sau hoặc liên hệ nhân viên để được hỗ trợ."
+  },
+  {
+    "type": "fallback_response",
+    "category": "out_of_scope",
+    "content": "Yêu cầu này nằm ngoài phạm vi dịch vụ của tôi. Vui lòng liên hệ nhân viên để được hỗ trợ."
+  }
+] 
