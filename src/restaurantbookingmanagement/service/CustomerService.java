@@ -1,6 +1,10 @@
 package restaurantbookingmanagement.service;
 
 import restaurantbookingmanagement.model.*;
+import restaurantbookingmanagement.service.fileservice.CustomerFileService;
+import restaurantbookingmanagement.service.validator.BookingValidator;
+import restaurantbookingmanagement.service.validator.CustomerValidator;
+import restaurantbookingmanagement.service.search.CustomerSearchService;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -10,45 +14,33 @@ import java.time.format.DateTimeFormatter;
  * Service xử lý logic nghiệp vụ khách hàng
  */
 public class CustomerService {
-    private final FileService fileService;
+    private final CustomerFileService customerFileService;
     private final BookingService bookingService;
+    private final CustomerSearchService customerSearchService;
     
     public CustomerService() {
-        this.fileService = new FileService();
-        this.bookingService = new BookingService();
+        this.customerFileService = new CustomerFileService();
+        TableService tableService = new TableService(); // or inject as needed
+        BookingValidator bookingValidator = new BookingValidator();
+        this.bookingService = new BookingService(tableService, bookingValidator);
+        this.customerSearchService = new CustomerSearchService();
     }
     
     /**
      * Tạo khách hàng mới
      */
     public Customer createCustomer(String name, String phone, String email) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        
-        // Kiểm tra xem khách hàng đã tồn tại chưa
-        boolean customerExists = customers.stream()
-                .anyMatch(c -> c.getPhone().equals(phone));
-        
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        if (!CustomerValidator.isValid(new Customer(0, name, phone))) return null;
+        boolean customerExists = customers.stream().anyMatch(c -> c.getPhone().equals(phone));
         if (customerExists) {
-            return customers.stream()
-                    .filter(c -> c.getPhone().equals(phone))
-                    .findFirst()
-                    .orElse(null);
+            return customers.stream().filter(c -> c.getPhone().equals(phone)).findFirst().orElse(null);
         }
-        
-        // Tạo customerId mới
-        int nextCustomerId = customers.stream()
-                .mapToInt(Customer::getCustomerId)
-                .max()
-                .orElse(0) + 1;
-        
+        int nextCustomerId = customers.stream().mapToInt(Customer::getCustomerId).max().orElse(0) + 1;
         Customer newCustomer = new Customer(nextCustomerId, name, phone);
-        if (email != null && !email.isEmpty()) {
-            newCustomer.setEmail(email);
-        }
-        
+        if (email != null && !email.isEmpty()) newCustomer.setEmail(email);
         customers.add(newCustomer);
-        fileService.writeCustomersToFile(customers);
-        
+        customerFileService.writeCustomersToFile(customers);
         return newCustomer;
     }
     
@@ -56,17 +48,16 @@ public class CustomerService {
      * Tạo khách hàng mới với đầy đủ thông tin (role, password, ...)
      */
     public Customer createCustomer(Customer customer) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        // Kiểm tra trùng số điện thoại
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        if (!CustomerValidator.isValid(customer)) return null;
         boolean exists = customers.stream().anyMatch(c -> c.getPhone().equals(customer.getPhone()));
         if (exists) {
             return customers.stream().filter(c -> c.getPhone().equals(customer.getPhone())).findFirst().orElse(null);
         }
-        // Gán customerId mới
         int nextCustomerId = customers.stream().mapToInt(Customer::getCustomerId).max().orElse(0) + 1;
         customer.setCustomerId(nextCustomerId);
         customers.add(customer);
-        fileService.writeCustomersToFile(customers);
+        customerFileService.writeCustomersToFile(customers);
         return customer;
     }
     
@@ -74,64 +65,50 @@ public class CustomerService {
      * Tìm khách hàng theo số điện thoại
      */
     public Customer findCustomerByPhone(String phone) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        return customers.stream()
-                .filter(c -> c.getPhone().equals(phone))
-                .findFirst()
-                .orElse(null);
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        return customers.stream().filter(c -> c.getPhone().equals(phone)).findFirst().orElse(null);
     }
 
     /**
      * Tìm khách hàng theo tên
      */
     public Customer findCustomerByName(String name) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        return customers.stream()
-                .filter(c -> c.getName().equalsIgnoreCase(name))
-                .findFirst()
-                .orElse(null);
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        return customers.stream().filter(c -> c.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
     
     /**
      * Tìm khách hàng theo ID
      */
     public Customer findCustomerById(int customerId) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        return customers.stream()
-                .filter(c -> c.getCustomerId() == customerId)
-                .findFirst()
-                .orElse(null);
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        return customers.stream().filter(c -> c.getCustomerId() == customerId).findFirst().orElse(null);
     }
 
     public Customer findCustomerByEmail(String email) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        return customers.stream()
-                .filter(c -> c.getEmail().equals(email))
-                .findFirst()
-                .orElse(null);
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        return customers.stream().filter(c -> c.getEmail().equals(email)).findFirst().orElse(null);
     }
     
     /**
      * Lấy tất cả khách hàng
      */
     public List<Customer> getAllCustomers() {
-        return new ArrayList<>(fileService.readCustomersFromFile());
+        return new ArrayList<>(customerFileService.readCustomersFromFile());
     }
     
     /**
      * Cập nhật thông tin khách hàng theo ID
      */
     public boolean updateCustomer(int customerId, String name, String phone, String email) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         for (int i = 0; i < customers.size(); i++) {
             if (customers.get(i).getCustomerId() == customerId) {
                 Customer updatedCustomer = new Customer(customerId, name, phone);
-                if (email != null && !email.isEmpty()) {
-                    updatedCustomer.setEmail(email);
-                }
+                if (email != null && !email.isEmpty()) updatedCustomer.setEmail(email);
+                if (!CustomerValidator.isValid(updatedCustomer)) return false;
                 customers.set(i, updatedCustomer);
-                fileService.writeCustomersToFile(customers);
+                customerFileService.writeCustomersToFile(customers);
                 return true;
             }
         }
@@ -152,9 +129,9 @@ public class CustomerService {
             return false; // Không thể xóa vì có booking
         }
         
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         customers.removeIf(c -> c.getCustomerId() == customerId);
-        fileService.writeCustomersToFile(customers);
+        customerFileService.writeCustomersToFile(customers);
         return true;
     }
     
@@ -275,13 +252,7 @@ public class CustomerService {
      * Tìm kiếm khách hàng theo tên hoặc số điện thoại
      */
     public List<Customer> searchCustomers(String searchTerm) {
-        List<Customer> customers = fileService.readCustomersFromFile();
-        String lowerSearchTerm = searchTerm.toLowerCase();
-        
-        return customers.stream()
-                .filter(c -> c.getName().toLowerCase().contains(lowerSearchTerm) ||
-                           c.getPhone().contains(searchTerm))
-                .collect(Collectors.toList());
+        return customerSearchService.searchCustomers(searchTerm);
     }
     
     /**
@@ -318,7 +289,7 @@ public class CustomerService {
      * Cập nhật thông tin khách hàng theo số điện thoại
      */
     public boolean updateCustomer(String phone, String newName, String newPhone, String newEmail) {
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         
         for (int i = 0; i < customers.size(); i++) {
             if (customers.get(i).getPhone().equals(phone)) {
@@ -333,7 +304,7 @@ public class CustomerService {
                     customer.setEmail(newEmail);
                 }
                 customers.set(i, customer);
-                fileService.writeCustomersToFile(customers);
+                customerFileService.writeCustomersToFile(customers);
                 return true;
             }
         }
@@ -344,12 +315,12 @@ public class CustomerService {
      * Xóa khách hàng theo số điện thoại
      */
     public boolean deleteCustomer(String phone) {
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         
         for (int i = 0; i < customers.size(); i++) {
             if (customers.get(i).getPhone().equals(phone)) {
                 customers.remove(i);
-                fileService.writeCustomersToFile(customers);
+                customerFileService.writeCustomersToFile(customers);
                 return true;
             }
         }

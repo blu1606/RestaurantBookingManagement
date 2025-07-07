@@ -14,6 +14,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import restaurantbookingmanagement.utils.DebugUtil;
+import restaurantbookingmanagement.model.Customer;
 
 /**
  * Helper class để giao tiếp với Python AI Agent
@@ -49,34 +50,37 @@ public class AIAgentConnector {
      * Gửi yêu cầu đến AI Agent và nhận về phản hồi với role
      */
     public AIResponse processUserInput(String userInput, String role) {
+        return processUserInput(userInput, role, null);
+    }
+    
+    /**
+     * Gửi yêu cầu đến AI Agent và nhận về phản hồi với role và Customer
+     */
+    public AIResponse processUserInput(String userInput, String role, Customer currentCustomer) {
         try {
-            // Tạo JSON request với session ID và role
             Map<String, Object> requestData = new HashMap<>();
             requestData.put("userInput", userInput);
             requestData.put("sessionId", currentSessionId);
             requestData.put("role", role);
-            
+            if (currentCustomer != null) {
+                requestData.put("customerName", currentCustomer.getName());
+                requestData.put("customerPhone", currentCustomer.getPhone());
+                requestData.put("customerEmail", currentCustomer.getEmail());
+            }
             String jsonRequest = gson.toJson(requestData);
-            
-            // Tạo HTTP request
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(AI_API_URL))
                     .header("Content-Type", "application/json")
                     .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
                     .timeout(Duration.ofSeconds(TIMEOUT_SECONDS))
                     .build();
-            
-            // Gửi request và nhận response
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            
             if (response.statusCode() == 200) {
-                // Parse JSON response
                 return parseJsonResponse(response.body());
             } else {
                 System.err.println("AI API returned status code: " + response.statusCode());
                 return createErrorResponse("Lỗi kết nối với AI Agent");
             }
-            
         } catch (Exception e) {
             System.err.println("Error communicating with AI Agent: " + e.getMessage());
             return createErrorResponse("Không thể kết nối với AI Agent. Vui lòng thử lại sau.");

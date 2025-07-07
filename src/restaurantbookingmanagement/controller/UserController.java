@@ -465,30 +465,20 @@ public class UserController {
      * Chat với AI
      */
     private void chatWithAI() {
-        view.displayMessage("\n--- Chế độ Chat với AI (gõ 'back' để quay lại menu, 'debug' để bật/tắt debug) ---");
-        String sessionId = "user_" + System.currentTimeMillis();
-        while (true) {
-            String userInput = view.getUserInput();
-            if (userInput.equalsIgnoreCase("back") || userInput.equalsIgnoreCase("menu")) {
-                view.displayMessage("Quay lại menu chính.");
-                break;
-            }
-            if (userInput.equalsIgnoreCase("debug")) {
-                DebugUtil.toggleDebug();
-                view.displayMessage("Debug mode: " + (DebugUtil.isDebug() ? "ON" : "OFF"));
-                continue;
-            }
-            if (userInput.isEmpty()) continue;
-
-            // Gửi tới AI agent
-            AIResponse response = aiController.chatWithAI(userInput, "USER", sessionId);
-            if (response != null) {
-                // Xử lý response thông qua AiService
-                aiService.processAIResponse(response, orderService, bookingService, customerService, view);
-            } else {
-                view.displayMessage("AI: Xin lỗi, tôi không thể trả lời lúc này.");
-            }
+        Customer currentCustomer = authController.getCurrentCustomer();
+        if (currentCustomer == null) {
+            view.displayError("Bạn cần đăng nhập trước khi đặt bàn qua AI.");
+            return;
         }
+        String userInput = view.getInputHandler().getStringWithCancel("Nhập yêu cầu đặt bàn (ví dụ: Đặt bàn cho 4 người tối nay):");
+        if (userInput == null) {
+            view.displayMessage("Đã hủy thao tác đặt bàn qua AI.");
+            return;
+            }
+        // Gọi AI Agent, truyền thông tin user
+        AIResponse aiResponse = aiController.chatWithAI(userInput, "user", currentCustomer);
+        view.displayMessage("AI: " + aiResponse.getNaturalResponse());
+        // Có thể xử lý tiếp kết quả booking nếu cần
     }
     
     /**

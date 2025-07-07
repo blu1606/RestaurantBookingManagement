@@ -22,6 +22,7 @@ class AgentManager:
         self.agents = {}
         self.conversation_history = {}
         self.chat_sessions = {}  # Lưu chat sessions cho từng người dùng
+        self.pending_actions = {}  # NEW: Lưu trạng thái pending action cho từng session
         
         # Khởi tạo các agent
         self._initialize_agents()
@@ -45,7 +46,7 @@ class AgentManager:
         except Exception as e:
             print(f"🔥 Error initializing agents: {e}")
     
-    def process_user_input(self, user_input: str, session_id: str = "default", role: str = "user") -> Dict[str, Any]:
+    def process_user_input(self, user_input: str, session_id: str = "default", role: str = "user", user_info: dict = None) -> Dict[str, Any]:
         """
         Xử lý input của user thông qua Router AI và các Agent chuyên biệt
         """
@@ -58,6 +59,36 @@ class AgentManager:
                     self.chat_sessions[session_id] = None
             
             current_chat_session = self.chat_sessions[session_id]
+
+            # 0. Nếu session này đang có pending action (ask_for_info), tiếp tục với tool/action đó
+            if session_id in self.pending_actions:
+                pending = self.pending_actions[session_id]
+                agent_name = pending["agent_name"]
+                tool = pending["tool"]
+                collected_params = pending["collected_params"]
+                missing_params = pending["missing_params"]
+                # Lấy agent tương ứng
+                agent = self.agents.get(agent_name)
+                if not agent:
+                    agent = self.agents.get("FallbackAgent")
+                # Gọi agent để bổ sung thông tin
+                # Agent cần có hàm bổ sung params (nếu chưa có thì sẽ bổ sung ở agent)
+                response = agent.handle_pending_action(user_input, tool, collected_params, missing_params, session_id, chat_session=current_chat_session)
+                # Nếu đã đủ params, xóa pending
+                if response.get("action") != "ask_for_info":
+                    del self.pending_actions[session_id]
+                else:
+                    # Nếu vẫn thiếu, cập nhật lại collected_params, missing_params
+                    self.pending_actions[session_id]["collected_params"] = response.get("collected_params", collected_params)
+                    self.pending_actions[session_id]["missing_params"] = response.get("missing_params", missing_params)
+                # Bổ sung routing info cho response
+                response["routing"] = {
+                    "intent": pending.get("intent", "pending"),
+                    "agent": agent_name,
+                    "confidence": 1.0
+                }
+                self._update_conversation_history(session_id, user_input, response)
+                return response
 
             # 1. Router AI phân tích ý định
             routing_result = self.router.route_to_agent(user_input)
@@ -94,7 +125,20 @@ class AgentManager:
                     print(f"⚠️ Failed to update agent role: {e}")
             
             # 4. Xử lý yêu cầu bằng agent chuyên biệt, truyền chat_session
+            if agent_name == "BookingAgent":
+                response = agent.process_request(user_input, session_id, chat_session=current_chat_session, user_info=user_info)
+            else:
             response = agent.process_request(user_input, session_id, chat_session=current_chat_session)
+            
+            # Nếu response là ask_for_info, lưu pending action
+            if response.get("action") == "ask_for_info":
+                self.pending_actions[session_id] = {
+                    "agent_name": agent_name,
+                    "tool": response.get("original_tool", {}),
+                    "collected_params": response.get("collected_params", {}),
+                    "missing_params": response.get("parameters", {}).get("missing_params", []),
+                    "intent": intent
+                }
             
             # 5. Thêm thông tin routing vào response
             response["routing"] = {

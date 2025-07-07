@@ -1,6 +1,7 @@
 import json
 from typing import Dict, Any
 from ..core.base_agent import BaseAgent
+from ..utils import handle_pending_action_utils
 
 
 class CancellationAgent(BaseAgent):
@@ -199,3 +200,15 @@ class CancellationAgent(BaseAgent):
             return f"{time_str} chiều nay"
         else:
             return f"{time_str} tối nay"  # Default 
+    
+    def handle_pending_action(self, user_input, tool, collected_params, missing_params, session_id, chat_session=None):
+        return handle_pending_action_utils(
+            user_input,
+            tool,
+            collected_params,
+            missing_params,
+            self._extract_cancellation_parameters,
+            self._check_missing_parameters,
+            self._ask_for_missing_info,
+            self.create_response
+        ) 

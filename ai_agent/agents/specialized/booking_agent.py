@@ -1,6 +1,7 @@
 import json
 from typing import Dict, Any
 from ..core.base_agent import BaseAgent
+from ..utils import handle_pending_action_utils
 
 class BookingAgent(BaseAgent):
     """
@@ -34,28 +35,26 @@ class BookingAgent(BaseAgent):
         - Luôn xác nhận thông tin trước khi thực hiện đặt bàn
         """
     
-    def process_request(self, user_input: str, session_id: str = "default", chat_session=None) -> Dict[str, Any]:
-        # 1. Check if user_input matches any tool
+    def process_request(self, user_input: str, session_id: str = "default", chat_session=None, user_info=None) -> Dict[str, Any]:
         tool = self.detect_tool_from_prompt(user_input)
         if tool:
-            # Extract parameters từ user input
             extracted_params = self._extract_booking_parameters(user_input, tool)
-            
-            # Kiểm tra xem có đủ thông tin không
+            # Nếu có user_info, bổ sung vào params nếu thiếu
+            if user_info:
+                for k in ["customerName", "customerPhone", "customerEmail"]:
+                    if k in tool.get("parameters", []) and (k not in extracted_params or not extracted_params[k]):
+                        val = user_info.get(k)
+                        if val:
+                            extracted_params[k] = val
             missing_params = self._check_missing_parameters(extracted_params, tool)
-            
             if missing_params:
-                # Nếu thiếu thông tin, hỏi thêm
                 return self._ask_for_missing_info(missing_params, tool, user_input)
             else:
-                # Nếu đủ thông tin, thực hiện action
                 return self.create_response(
                     action=tool["name"],
                     parameters=extracted_params,
                     natural_response=f"Tôi sẽ thực hiện tác vụ: {tool['description']} với thông tin đã cung cấp."
                 )
-        
-        # 2. Fallback: Lấy context từ knowledge base (tables, bookings)
         context = self._get_relevant_context(user_input)
         prompt = f"""
         {self.get_system_prompt()}
@@ -218,3 +217,15 @@ class BookingAgent(BaseAgent):
             return f"{time_str} chiều nay"
         else:
             return f"{time_str} tối nay"  # Default 
+
+    def handle_pending_action(self, user_input, tool, collected_params, missing_params, session_id, chat_session=None):
+        return handle_pending_action_utils(
+            user_input,
+            tool,
+            collected_params,
+            missing_params,
+            self._extract_booking_parameters,
+            self._check_missing_parameters,
+            self._ask_for_missing_info,
+            self.create_response
+        ) 

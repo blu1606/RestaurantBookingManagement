@@ -1,6 +1,7 @@
 import json
 from typing import Dict, Any
 from ..core.base_agent import BaseAgent
+from ..utils import handle_pending_action_utils
 
 class OrderAgent(BaseAgent):
     """
@@ -200,4 +201,16 @@ class OrderAgent(BaseAgent):
             action="ask_for_info",
             parameters={"missing_params": missing_params, "original_tool": tool_name},
             natural_response=response
+        )
+    
+    def handle_pending_action(self, user_input, tool, collected_params, missing_params, session_id, chat_session=None):
+        return handle_pending_action_utils(
+            user_input,
+            tool,
+            collected_params,
+            missing_params,
+            self._extract_order_parameters,
+            self._check_missing_parameters,
+            self._ask_for_missing_info,
+            self.create_response
         ) 

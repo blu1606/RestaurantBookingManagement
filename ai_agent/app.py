@@ -54,7 +54,12 @@ def process_user_input():
         user_input = data['userInput']
         session_id = data.get('sessionId', 'default')
         role = data.get('role', 'user').lower()
-        
+        # Lấy thông tin user nếu có
+        user_info = {
+            'customerName': data.get('customerName'),
+            'customerPhone': data.get('customerPhone'),
+            'customerEmail': data.get('customerEmail'),
+        }
         print(f"➡️ Received input from session {session_id} (Role: {role}): {user_input}")
 
         if not agent_manager:
@@ -70,9 +75,8 @@ def process_user_input():
                 }
             }), 500
 
-        # Process through AgentManager
-        response = agent_manager.process_user_input(user_input, session_id, role)
-        
+        # Process through AgentManager, truyền user_info
+        response = agent_manager.process_user_input(user_input, session_id, role, user_info=user_info)
         print(f"✅ AgentManager response for session {session_id}: {response}")
         return jsonify(response)
 

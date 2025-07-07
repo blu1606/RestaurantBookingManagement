@@ -49,7 +49,7 @@ class BaseAgent(ABC):
             permissions_path = os.path.join(os.path.dirname(__file__), "..", "..", "agent_permissions.json")
             if not os.path.exists(permissions_path):
                 print(f"⚠️ {self.agent_name}: Permissions file not found, using default permissions")
-                self.allowed_tools = allowed_tools or []
+                self.allowed_tools = []
                 return
             
             with open(permissions_path, 'r', encoding='utf-8') as f:
@@ -57,7 +57,7 @@ class BaseAgent(ABC):
             
             # Lấy permissions cho agent này
             agent_permissions = permissions_data.get("agents", {}).get(self.agent_name, {})
-            self.allowed_tools = agent_permissions.get("allowed_tools", allowed_tools or [])
+            self.allowed_tools = agent_permissions.get("allowed_tools", [])
             
             # Lấy role permissions
             role_permissions = permissions_data.get("roles", {}).get(self.user_role, {})
@@ -68,7 +68,7 @@ class BaseAgent(ABC):
             
         except Exception as e:
             print(f"🔥 {self.agent_name}: Error loading permissions: {e}")
-            self.allowed_tools = allowed_tools or []
+            self.allowed_tools = []
             self.role_permissions = []
     
     def _load_tools(self):

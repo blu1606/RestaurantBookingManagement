@@ -1,13 +1,8 @@
 import json
 from typing import Dict, Any, Optional
-try:
-    from ..core.base_agent import BaseAgent
-except ImportError:
-    try:
-        from agents.core.base_agent import BaseAgent
-    except ImportError:
-        # Fallback for direct execution
-        from base_agent import BaseAgent
+from ..core.base_agent import BaseAgent
+
+from ..utils import handle_pending_action_utils
 
 class MenuAgent(BaseAgent):
     """
@@ -159,4 +154,21 @@ class MenuAgent(BaseAgent):
             elif item.get("type") == "special":
                 return f"⭐ {item.get('name', '')} - {item.get('description', '')}"
         
-        return super()._format_knowledge_item(item) 
+        return super()._format_knowledge_item(item)
+
+    def handle_pending_action(self, user_input, tool, collected_params, missing_params, session_id, chat_session=None):
+        # MenuAgent chỉ có show_menu, không có param bắt buộc nên luôn trả về show_menu
+        return handle_pending_action_utils(
+            user_input,
+            tool,
+            collected_params,
+            missing_params,
+            lambda u, t: {},  # Không cần extract param
+            lambda p, t: [],  # Không có param thiếu
+            lambda m, t, o: self.create_response(
+                action="show_menu",
+                parameters={},
+                natural_response="Tôi sẽ thực hiện tác vụ: Hiển thị toàn bộ menu nhà hàng."
+            ),
+            self.create_response
+        ) 

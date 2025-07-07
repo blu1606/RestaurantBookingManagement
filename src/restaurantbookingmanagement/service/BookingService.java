@@ -6,27 +6,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import restaurantbookingmanagement.utils.DebugUtil;
+import restaurantbookingmanagement.service.fileservice.BookingFileService;
+import restaurantbookingmanagement.service.fileservice.CustomerFileService;
 
 /**
  * Service xử lý logic nghiệp vụ đặt bàn
  */
 public class BookingService {
-    private final FileService fileService;
+    private final BookingFileService bookingFileService;
+    private final CustomerFileService customerFileService;
+    private final TableService tableService;
     private int nextBookingId;
     
-    public BookingService() {
-        this.fileService = new FileService();
+    public BookingService(TableService tableService) {
+        this.bookingFileService = new BookingFileService();
+        this.customerFileService = new CustomerFileService();
+        this.tableService = tableService;
         this.nextBookingId = 1;
-        
-        // Khởi tạo dữ liệu mẫu nếu cần
-        fileService.initializeSampleDataIfNeeded();
         
         // Tính toán nextBookingId từ dữ liệu hiện tại
         calculateNextBookingId();
     }
     
     private void calculateNextBookingId() {
-        List<Booking> existingBookings = fileService.readBookingsFromFile();
+        List<Booking> existingBookings = bookingFileService.readBookingsFromFile();
         if (!existingBookings.isEmpty()) {
             this.nextBookingId = existingBookings.stream()
                     .mapToInt(Booking::getBookingId)
@@ -35,38 +38,15 @@ public class BookingService {
         }
     }
     
-    public List<Table> getAllTables() {
-        return new ArrayList<>(fileService.readTablesFromFile());
-    }
-    
-    public List<Table> getAvailableTables() {
-        return fileService.readTablesFromFile().stream()
-                .filter(table -> table.getStatus() == TableStatus.AVAILABLE)
-                .collect(Collectors.toList());
-    }
-    
-    public List<Table> getAvailableTablesForCapacity(int capacity) {
-        return fileService.readTablesFromFile().stream()
-                .filter(table -> table.getStatus() == TableStatus.AVAILABLE && table.getCapacity() >= capacity)
-                .collect(Collectors.toList());
-    }
-    
-    public Table findAvailableTable(int capacity) {
-        return fileService.readTablesFromFile().stream()
-                .filter(table -> table.getStatus() == TableStatus.AVAILABLE && table.getCapacity() >= capacity)
-                .findFirst()
-                .orElse(null);
-    }
-    
     public Booking createBooking(Customer customer, int numberOfGuests, LocalDateTime bookingTime) {
-        List<Table> tables = fileService.readTablesFromFile();
-        List<Booking> bookings = fileService.readBookingsFromFile();
+        List<Table> tables = tableService.getAllTables();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
         
         // Lưu thông tin khách hàng vào customers.json và lấy customer đã được lưu
         Customer savedCustomer = saveCustomerToFile(customer);
 
         // Đọc lại customers từ file để đảm bảo đồng bộ
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         Customer realCustomer = customers.stream()
             .filter(c -> c.getPhone().equals(savedCustomer.getPhone()))
             .findFirst()
@@ -78,7 +58,7 @@ public class BookingService {
         DebugUtil.debugPrint("   - Phone: " + realCustomer.getPhone());
         DebugUtil.debugPrint("   - ID: " + realCustomer.getCustomerId());
 
-        Table availableTable = findAvailableTable(numberOfGuests);
+        Table availableTable = tableService.findAvailableTable(numberOfGuests);
         if (availableTable == null) {
             return null; // Không có bàn phù hợp
         }
@@ -96,16 +76,16 @@ public class BookingService {
 
         // Cập nhật danh sách bàn
         updateTableInList(tables, availableTable);
-        fileService.writeTablesToFile(tables);
+        tableService.writeTablesToFile(tables);
 
         // Thêm booking mới vào danh sách
         bookings.add(booking);
-        fileService.writeBookingsToFile(bookings);
+        bookingFileService.writeBookingsToFile(bookings);
 
         // Cập nhật activeBookingIds cho customer
         realCustomer.addBookingId(booking.getBookingId());
         updateCustomerInList(customers, realCustomer);
-        fileService.writeCustomersToFile(customers);
+        customerFileService.writeCustomersToFile(customers);
 
         return booking;
     }
@@ -144,7 +124,7 @@ public class BookingService {
     }
     
     private Customer saveCustomerToFile(Customer customer) {
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         
         DebugUtil.debugPrint("🔍 DEBUG - saveCustomerToFile called with:");
         DebugUtil.debugPrint("   - Name: " + customer.getName());
@@ -169,7 +149,7 @@ public class BookingService {
                 DebugUtil.debugPrint("✅ Creating new customer with ID: " + nextCustomerId);
             }
             customers.add(customerToSave);
-            fileService.writeCustomersToFile(customers);
+            customerFileService.writeCustomersToFile(customers);
             DebugUtil.debugPrint("✅ Added new customer to file and returning: " + customerToSave.getName() + " - " + customerToSave.getPhone());
             return customerToSave; // Trả về customer đã được lưu
         } else {
@@ -184,9 +164,9 @@ public class BookingService {
     }
     
     public boolean cancelBooking(int bookingId) {
-        List<Booking> bookings = fileService.readBookingsFromFile();
-        List<Table> tables = fileService.readTablesFromFile();
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
+        List<Table> tables = tableService.getAllTables();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         
         Booking booking = findBookingById(bookingId, bookings);
         if (booking != null && booking.getStatus().equals("CONFIRMED")) {
@@ -202,12 +182,13 @@ public class BookingService {
             if (customer != null) {
                 customer.removeBookingId(bookingId);
                 updateCustomerInList(customers, customer);
-                fileService.writeCustomersToFile(customers);
+                customerFileService.writeCustomersToFile(customers);
             }
             
             // Lưu thay đổi
-            fileService.writeBookingsToFile(bookings);
-            fileService.writeTablesToFile(tables);
+            bookings.remove(booking);
+            bookingFileService.writeBookingsToFile(bookings);
+            tableService.writeTablesToFile(tables);
             
             return true;
         }
@@ -215,7 +196,7 @@ public class BookingService {
     }
     
     public Booking findBookingById(int bookingId) {
-        return findBookingById(bookingId, fileService.readBookingsFromFile());
+        return findBookingById(bookingId, bookingFileService.readBookingsFromFile());
     }
     
     private Booking findBookingById(int bookingId, List<Booking> bookings) {
@@ -226,18 +207,18 @@ public class BookingService {
     }
     
     public List<Booking> getBookingsByCustomer(Customer customer) {
-        return fileService.readBookingsFromFile().stream()
+        return bookingFileService.readBookingsFromFile().stream()
                 .filter(booking -> booking.getCustomer().getCustomerId() == customer.getCustomerId())
                 .collect(Collectors.toList());
     }
     
     public List<Booking> getAllBookings() {
-        return new ArrayList<>(fileService.readBookingsFromFile());
+        return new ArrayList<>(bookingFileService.readBookingsFromFile());
     }
     
     public void completeBooking(int bookingId) {
-        List<Booking> bookings = fileService.readBookingsFromFile();
-        List<Table> tables = fileService.readTablesFromFile();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
+        List<Table> tables = tableService.getAllTables();
         
         Booking booking = findBookingById(bookingId, bookings);
         if (booking != null) {
@@ -249,8 +230,9 @@ public class BookingService {
             updateTableInList(tables, table);
             
             // Lưu thay đổi
-            fileService.writeBookingsToFile(bookings);
-            fileService.writeTablesToFile(tables);
+            bookings.remove(booking);
+            bookingFileService.writeBookingsToFile(bookings);
+            tableService.writeTablesToFile(tables);
         }
     }
     
@@ -258,8 +240,8 @@ public class BookingService {
      * Fix các booking có customer null
      */
     public void fixBookingsWithNullCustomer() {
-        List<Booking> bookings = fileService.readBookingsFromFile();
-        List<Customer> customers = fileService.readCustomersFromFile();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
         
         boolean hasChanges = false;
         
@@ -281,8 +263,8 @@ public class BookingService {
         }
         
         if (hasChanges) {
-            fileService.writeBookingsToFile(bookings);
-            fileService.writeCustomersToFile(customers);
+            bookingFileService.writeBookingsToFile(bookings);
+            customerFileService.writeCustomersToFile(customers);
             DebugUtil.debugPrint("✅ Fixed " + bookings.stream().filter(b -> b.getCustomer() != null).count() + " bookings");
         } else {
             DebugUtil.debugPrint("✅ No bookings need fixing");
@@ -290,30 +272,11 @@ public class BookingService {
     }
     
     /**
-     * Add a new table to the system
-     */
-    public Table addTable(int capacity) {
-        List<Table> tables = fileService.readTablesFromFile();
-        
-        // Calculate next table ID
-        int nextTableId = tables.stream()
-                .mapToInt(Table::getTableId)
-                .max()
-                .orElse(0) + 1;
-        
-        Table newTable = new Table(nextTableId, capacity);
-        tables.add(newTable);
-        
-        fileService.writeTablesToFile(tables);
-        return newTable;
-    }
-    
-    /**
      * Delete a booking permanently
      */
     public boolean deleteBooking(int bookingId) {
-        List<Booking> bookings = fileService.readBookingsFromFile();
-        List<Table> tables = fileService.readTablesFromFile();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
+        List<Table> tables = tableService.getAllTables();
         
         Booking booking = findBookingById(bookingId, bookings);
         if (booking != null) {
@@ -322,60 +285,19 @@ public class BookingService {
                 Table table = booking.getTable();
                 table.setStatus(TableStatus.AVAILABLE);
                 updateTableInList(tables, table);
-                fileService.writeTablesToFile(tables);
+                tableService.writeTablesToFile(tables);
             }
             
             // Remove booking
             bookings.remove(booking);
-            fileService.writeBookingsToFile(bookings);
+            bookingFileService.writeBookingsToFile(bookings);
             return true;
         }
         return false;
     }
     
-    public boolean updateTable(int id, String newCapacity, String newStatus) {
-        List<Table> tables = fileService.readTablesFromFile();
-        Table table = null;
-        for (Table t : tables) if (t.getTableId() == id) table = t;
-        if (table == null) return false;
-        if (newCapacity != null && !newCapacity.isEmpty()) {
-            try { table.setCapacity(Integer.parseInt(newCapacity)); } catch (Exception e) { return false; }
-        }
-        if (newStatus != null && !newStatus.isEmpty()) {
-            try { table.setStatus(TableStatus.valueOf(newStatus)); } catch (Exception e) { return false; }
-        }
-        for (int i = 0; i < tables.size(); i++) if (tables.get(i).getTableId() == id) tables.set(i, table);
-        fileService.writeTablesToFile(tables);
-        return true;
-    }
-    
-    public boolean deleteTable(int id) {
-        List<Table> tables = fileService.readTablesFromFile();
-        boolean found = false;
-        for (int i = 0; i < tables.size(); i++) {
-            if (tables.get(i).getTableId() == id) {
-                tables.remove(i);
-                found = true;
-                break;
-            }
-        }
-        if (found) fileService.writeTablesToFile(tables);
-        return found;
-    }
-    
-    public List<Table> searchTables(String keyword) {
-        List<Table> tables = fileService.readTablesFromFile();
-        List<Table> result = new ArrayList<>();
-        for (Table t : tables) {
-            if (String.valueOf(t.getTableId()).equals(keyword) || String.valueOf(t.getCapacity()).equals(keyword) || t.getStatus().name().equalsIgnoreCase(keyword)) {
-                result.add(t);
-            }
-        }
-        return result;
-    }
-    
     public boolean updateBooking(int id, String guestsStr, String timeStr) {
-        List<Booking> bookings = fileService.readBookingsFromFile();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
         Booking booking = null;
         for (Booking b : bookings) if (b.getBookingId() == id) booking = b;
         if (booking == null) return false;
@@ -389,7 +311,7 @@ public class BookingService {
             } catch (Exception e) { return false; }
         }
         for (int i = 0; i < bookings.size(); i++) if (bookings.get(i).getBookingId() == id) bookings.set(i, booking);
-        fileService.writeBookingsToFile(bookings);
+        bookingFileService.writeBookingsToFile(bookings);
         return true;
     }
 } 
