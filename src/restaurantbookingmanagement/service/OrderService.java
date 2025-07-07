@@ -9,6 +9,8 @@ import restaurantbookingmanagement.service.fileservice.OrderFileService;
 /**
  * Service xử lý logic nghiệp vụ đơn hàng
  */
+// Design Pattern: Dependency Injection
+// Purpose: Inject MenuService for flexible and testable order logic.
 public class OrderService {
     private final MenuItemFileService menuItemFileService;
     private final MenuService menuService;

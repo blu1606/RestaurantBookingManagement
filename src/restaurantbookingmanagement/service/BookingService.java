@@ -10,6 +10,9 @@ import restaurantbookingmanagement.service.fileservice.BookingFileService;
 import restaurantbookingmanagement.service.fileservice.CustomerFileService;
 import restaurantbookingmanagement.service.validator.BookingValidator;
 
+// Design Pattern: Dependency Injection, State
+// Purpose: Inject TableService and BookingValidator; manage Booking status using State pattern.
+
 /**
  * Service xử lý logic nghiệp vụ đặt bàn
  */
@@ -171,7 +174,7 @@ public class BookingService {
         
         Booking booking = findBookingById(bookingId, bookings);
         if (booking != null && booking.getStatus().equals("CONFIRMED")) {
-            booking.setStatus("CANCELLED");
+            booking.transitionTo(new Booking.CancelledState());
             
             // Cập nhật trạng thái bàn
             Table table = booking.getTable();
@@ -223,7 +226,7 @@ public class BookingService {
         
         Booking booking = findBookingById(bookingId, bookings);
         if (booking != null) {
-            booking.setStatus("COMPLETED");
+            booking.transitionTo(new Booking.CompletedState());
             
             // Cập nhật trạng thái bàn
             Table table = booking.getTable();

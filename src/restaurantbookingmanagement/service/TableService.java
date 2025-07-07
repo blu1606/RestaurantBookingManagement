@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import restaurantbookingmanagement.service.fileservice.TableFileService;
 
+// Design Pattern: Dependency Injection, State
+// Purpose: Inject TableFileService; manage Table status using State pattern (TableStatus).
+
 public class TableService {
     private final TableFileService tableFileService;
 
@@ -58,7 +61,10 @@ public class TableService {
             try { table.setCapacity(Integer.parseInt(newCapacity)); } catch (Exception e) { return false; }
         }
         if (newStatus != null && !newStatus.isEmpty()) {
-            try { table.setStatus(TableStatus.valueOf(newStatus)); } catch (Exception e) { return false; }
+            try {
+                TableStatus statusEnum = TableStatus.valueOf(newStatus);
+                table.transitionTo(Table.TableStateFactory.fromStatus(statusEnum));
+            } catch (Exception e) { return false; }
         }
         for (int i = 0; i < tables.size(); i++) if (tables.get(i).getTableId() == id) tables.set(i, table);
         tableFileService.writeTablesToFile(tables);

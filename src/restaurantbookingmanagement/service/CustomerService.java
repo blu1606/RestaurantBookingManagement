@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
 
+// Design Pattern: Dependency Injection
+// Purpose: Inject BookingService and CustomerSearchService for flexible and testable customer logic.
+
 /**
  * Service xử lý logic nghiệp vụ khách hàng
  */

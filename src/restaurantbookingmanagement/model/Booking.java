@@ -12,10 +12,12 @@ public class Booking {
     private LocalDateTime bookingTime;
     private int numberOfGuests;
     private String status; // "CONFIRMED", "CANCELLED", "COMPLETED"
+    private BookingState state;
     
     // No-args constructor for Gson deserialization
     public Booking() {
         this.status = "CONFIRMED";
+        this.state = BookingStateFactory.fromStatus(this.status);
     }
     
     public Booking(int bookingId, Customer customer, Table table, LocalDateTime bookingTime, int numberOfGuests) {
@@ -25,6 +27,7 @@ public class Booking {
         this.bookingTime = bookingTime;
         this.numberOfGuests = numberOfGuests;
         this.status = "CONFIRMED";
+        this.state = BookingStateFactory.fromStatus(this.status);
     }
     
     // Getters
@@ -52,6 +55,8 @@ public class Booking {
         return status;
     }
     
+    public BookingState getState() { return state; }
+    
     // Setters
     public void setBookingId(int bookingId) {
         this.bookingId = bookingId;
@@ -77,10 +82,74 @@ public class Booking {
         this.status = status;
     }
     
+    public void setState(BookingState state) { this.state = state; this.status = state.getName(); }
+    
+    public void transitionTo(BookingState newState) {
+        if (state.canTransitionTo(newState)) {
+            setState(newState);
+        } else {
+            throw new IllegalStateException("Invalid state transition from " + state.getName() + " to " + newState.getName());
+        }
+    }
+    
+    public void syncStateWithStatus() {
+        this.state = BookingStateFactory.fromStatus(this.status);
+    }
+    
     @Override
     public String toString() {
         return "Đặt bàn #" + bookingId + " - " + customer.getName() + 
                " - Bàn " + table.getTableId() + " - " + numberOfGuests + " người - " + 
                bookingTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+    }
+
+    // State Pattern for Booking
+    public static interface BookingState {
+        void handle(Booking booking);
+        boolean canTransitionTo(BookingState newState);
+        String getName();
+    }
+
+    public static class ConfirmedState implements BookingState {
+        @Override
+        public void handle(Booking booking) {
+            // Logic khi booking ở trạng thái CONFIRMED (nếu cần)
+        }
+        @Override
+        public boolean canTransitionTo(BookingState newState) {
+            return newState instanceof CancelledState || newState instanceof CompletedState;
+        }
+        @Override
+        public String getName() { return "CONFIRMED"; }
+    }
+
+    public static class CancelledState implements BookingState {
+        @Override
+        public void handle(Booking booking) { }
+        @Override
+        public boolean canTransitionTo(BookingState newState) { return false; }
+        @Override
+        public String getName() { return "CANCELLED"; }
+    }
+
+    public static class CompletedState implements BookingState {
+        @Override
+        public void handle(Booking booking) { }
+        @Override
+        public boolean canTransitionTo(BookingState newState) { return false; }
+        @Override
+        public String getName() { return "COMPLETED"; }
+    }
+
+    // Factory for BookingState
+    public static class BookingStateFactory {
+        public static BookingState fromStatus(String status) {
+            switch (status) {
+                case "CONFIRMED": return new ConfirmedState();
+                case "CANCELLED": return new CancelledState();
+                case "COMPLETED": return new CompletedState();
+                default: throw new IllegalArgumentException("Unknown status: " + status);
+            }
+        }
     }
 } 
