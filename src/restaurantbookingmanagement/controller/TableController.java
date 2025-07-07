@@ -9,11 +9,11 @@ import java.util.List;
  * Controller quản lý bàn
  */
 public class TableController {
-    private final BookingService bookingService;
+    private final TableService tableService;
     private final ConsoleView view;
     
-    public TableController(BookingService bookingService, ConsoleView view) {
-        this.bookingService = bookingService;
+    public TableController(TableService tableService, ConsoleView view) {
+        this.tableService = tableService;
         this.view = view;
     }
     
@@ -31,7 +31,7 @@ public class TableController {
             @Override
             public void execute(int n) {
                 switch (n) {
-                    case 1 -> view.displayTables(bookingService.getAllTables());
+                    case 1 -> view.displayTables(tableService.getAllTables());
                     case 2 -> addTableMenu();
                     case 3 -> editTableMenu();
                     case 4 -> deleteTableMenu();
@@ -52,7 +52,7 @@ public class TableController {
             view.displayMessage("Đã hủy thao tác thêm bàn.");
             return;
         }
-        bookingService.addTable(cap);
+        tableService.addTable(cap);
         view.displaySuccess("Đã thêm bàn mới.");
     }
     
@@ -75,7 +75,7 @@ public class TableController {
             view.displayMessage("Đã hủy thao tác sửa bàn.");
             return;
         }
-        boolean ok = bookingService.updateTable(id, capStr, statusStr);
+        boolean ok = tableService.updateTable(id, capStr, statusStr);
         if (ok) view.displaySuccess("Đã cập nhật bàn.");
         else view.displayError("Không tìm thấy bàn hoặc dữ liệu không hợp lệ.");
     }
@@ -89,7 +89,7 @@ public class TableController {
             view.displayMessage("Đã hủy thao tác xóa bàn.");
             return;
         }
-        boolean ok = bookingService.deleteTable(delId);
+        boolean ok = tableService.deleteTable(delId);
         if (ok) view.displaySuccess("Đã xóa bàn.");
         else view.displayError("Không tìm thấy bàn.");
     }
@@ -103,7 +103,7 @@ public class TableController {
             view.displayMessage("Đã hủy thao tác tìm kiếm bàn.");
             return;
         }
-        List<Table> result = bookingService.searchTables(keyword);
+        List<Table> result = tableService.searchTables(keyword);
         if (result.isEmpty()) view.displayError("Không tìm thấy bàn phù hợp.");
         else for (Table t : result) view.displayMessage(t.toString());
     }
@@ -112,14 +112,14 @@ public class TableController {
      * Hiển thị danh sách bàn
      */
     public void displayTables() {
-        view.displayTables(bookingService.getAllTables());
+        view.displayTables(tableService.getAllTables());
     }
     
     /**
      * Tìm bàn khả dụng
      */
     public Table findAvailableTable(int guests) {
-        return bookingService.findAvailableTable(guests);
+        return tableService.findAvailableTable(guests);
     }
     
     /**

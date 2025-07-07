@@ -3,7 +3,6 @@ package restaurantbookingmanagement.ai.handlers;
 import java.util.HashMap;
 import java.util.Map;
 import restaurantbookingmanagement.ai.AIResponse;
-import restaurantbookingmanagement.service.*;
 import restaurantbookingmanagement.view.ConsoleView;
 import restaurantbookingmanagement.model.Customer;
 import restaurantbookingmanagement.model.Booking;
@@ -44,13 +43,13 @@ public class AIActionHandlerRegistry {
     // --- Handler implementations ---
     public static class DeleteMenuHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer itemId = AIResponseUtils.getInt(response.getParameters(), "itemId");
             if (itemId == null) {
                 view.displayError("❌ Thiếu ID món ăn cần xóa.");
                 return;
             }
-            boolean success = orderService.deleteMenuItem(itemId);
+            boolean success = context.getMenuService().deleteMenuItem(itemId);
             if (success) {
                 view.displaySuccess("✅ Đã xóa món ăn #" + itemId);
             } else {
@@ -60,7 +59,7 @@ public class AIActionHandlerRegistry {
     }
     public static class UpdateMenuHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer itemId = AIResponseUtils.getInt(response.getParameters(), "itemId");
             String name = AIResponseUtils.getString(response.getParameters(), "name");
             Double price = AIResponseUtils.getDouble(response.getParameters(), "price");
@@ -69,7 +68,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu ID món ăn cần cập nhật.");
                 return;
             }
-            boolean success = orderService.updateMenuItem(itemId, name, String.valueOf(price), description);
+            boolean success = context.getMenuService().updateMenuItem(itemId, name, String.valueOf(price), description);
             if (success) {
                 view.displaySuccess("✅ Đã cập nhật món ăn #" + itemId);
             } else {
@@ -79,7 +78,7 @@ public class AIActionHandlerRegistry {
     }
     public static class AddItemToOrderHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer orderId = AIResponseUtils.getInt(response.getParameters(), "orderId");
             String itemName = AIResponseUtils.getString(response.getParameters(), "itemName");
             Integer quantity = AIResponseUtils.getInt(response.getParameters(), "quantity");
@@ -87,7 +86,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu thông tin orderId, itemName hoặc quantity.");
                 return;
             }
-            boolean success = orderService.addItemToOrder(orderId, itemName, quantity);
+            boolean success = context.getOrderService().addItemToOrder(orderId, itemName, quantity);
             if (success) {
                 view.displaySuccess("✅ Đã thêm " + quantity + " " + itemName + " vào đơn hàng #" + orderId);
             } else {
@@ -97,14 +96,14 @@ public class AIActionHandlerRegistry {
     }
     public static class RemoveItemFromOrderHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer orderId = AIResponseUtils.getInt(response.getParameters(), "orderId");
             String itemName = AIResponseUtils.getString(response.getParameters(), "itemName");
             if (orderId == null || itemName == null) {
                 view.displayError("❌ Thiếu thông tin orderId hoặc itemName.");
                 return;
             }
-            boolean success = orderService.removeItemFromOrder(orderId, itemName);
+            boolean success = context.getOrderService().removeItemFromOrder(orderId, itemName);
             if (success) {
                 view.displaySuccess("✅ Đã xóa " + itemName + " khỏi đơn hàng #" + orderId);
             } else {
@@ -114,13 +113,13 @@ public class AIActionHandlerRegistry {
     }
     public static class CompleteOrderHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer orderId = AIResponseUtils.getInt(response.getParameters(), "orderId");
             if (orderId == null) {
                 view.displayError("❌ Thiếu ID đơn hàng cần hoàn thành.");
                 return;
             }
-            boolean success = orderService.completeOrder(orderId);
+            boolean success = context.getOrderService().completeOrder(orderId);
             if (success) {
                 view.displaySuccess("✅ Đã hoàn thành đơn hàng #" + orderId);
             } else {
@@ -130,38 +129,38 @@ public class AIActionHandlerRegistry {
     }
     public static class CalculateBillHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer bookingId = AIResponseUtils.getInt(response.getParameters(), "bookingId");
             if (bookingId == null) {
                 view.displayError("❌ Thiếu ID booking cần tính tiền.");
                 return;
             }
-            double bill = orderService.calculateBillForBooking(bookingId);
+            double bill = context.getOrderService().calculateBillForBooking(bookingId);
             view.displaySuccess("💰 Tổng tiền cho booking #" + bookingId + ": " + String.format("%.0f VND", bill));
         }
     }
     public static class GetRevenueHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
-            double revenue = orderService.getTotalRevenue();
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            double revenue = context.getOrderService().getTotalRevenue();
             view.displaySuccess("💰 Tổng doanh thu: " + String.format("%.0f VND", revenue));
         }
     }
     public static class ShowMenuHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
-            view.displayMenu(orderService.getAllMenuItems());
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            view.displayMenu(context.getMenuService().getAllMenuItems());
         }
     }
     public static class AddTableHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer capacity = AIResponseUtils.getInt(response.getParameters(), "capacity");
             if (capacity == null || capacity <= 0 || capacity > 12) {
                 view.displayError("❌ Sức chứa phải từ 1 đến 12 người.");
                 return;
             }
-            Table newTable = bookingService.addTable(capacity);
+            Table newTable = context.getTableService().addTable(capacity);
             if (newTable != null) {
                 view.displaySuccess("✅ Đã thêm bàn mới: Bàn #" + newTable.getTableId() + " cho " + capacity + " người");
             } else {
@@ -171,13 +170,13 @@ public class AIActionHandlerRegistry {
     }
     public static class DeleteTableHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer tableId = AIResponseUtils.getInt(response.getParameters(), "tableId");
             if (tableId == null) {
                 view.displayError("❌ Thiếu ID bàn cần xóa.");
                 return;
             }
-            boolean success = bookingService.deleteTable(tableId);
+            boolean success = context.getTableService().deleteTable(tableId);
             if (success) {
                 view.displaySuccess("✅ Đã xóa bàn #" + tableId);
             } else {
@@ -187,7 +186,7 @@ public class AIActionHandlerRegistry {
     }
     public static class UpdateTableHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer tableId = AIResponseUtils.getInt(response.getParameters(), "tableId");
             Integer capacity = AIResponseUtils.getInt(response.getParameters(), "capacity");
             String status = AIResponseUtils.getString(response.getParameters(), "status");
@@ -195,7 +194,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu ID bàn cần cập nhật.");
                 return;
             }
-            boolean success = bookingService.updateTable(tableId, capacity != null ? String.valueOf(capacity) : null, status);
+            boolean success = context.getTableService().updateTable(tableId, capacity != null ? String.valueOf(capacity) : null, status);
             if (success) {
                 view.displaySuccess("✅ Đã cập nhật bàn #" + tableId);
             } else {
@@ -205,13 +204,13 @@ public class AIActionHandlerRegistry {
     }
     public static class SearchTablesHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             String keyword = AIResponseUtils.getString(response.getParameters(), "keyword");
             if (keyword == null || keyword.trim().isEmpty()) {
                 view.displayError("❌ Thiếu từ khóa tìm kiếm.");
                 return;
             }
-            java.util.List<Table> results = bookingService.searchTables(keyword);
+            java.util.List<Table> results = context.getTableService().searchTables(keyword);
             if (results.isEmpty()) {
                 view.displayMessage("📝 Không tìm thấy bàn nào phù hợp với: " + keyword);
             } else {
@@ -224,8 +223,8 @@ public class AIActionHandlerRegistry {
     }
     public static class ShowAvailableTablesHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
-            java.util.List<Table> availableTables = bookingService.getAvailableTables();
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            java.util.List<Table> availableTables = context.getTableService().getAvailableTables();
             if (availableTables.isEmpty()) {
                 view.displayMessage("📝 Không có bàn nào có sẵn.");
             } else {
@@ -238,8 +237,8 @@ public class AIActionHandlerRegistry {
     }
     public static class ShowAllTablesHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
-            java.util.List<Table> allTables = bookingService.getAllTables();
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            java.util.List<Table> allTables = context.getTableService().getAllTables();
             if (allTables.isEmpty()) {
                 view.displayMessage("📝 Không có bàn nào.");
             } else {
@@ -252,13 +251,13 @@ public class AIActionHandlerRegistry {
     }
     public static class CancelBookingHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer bookingId = AIResponseUtils.getInt(response.getParameters(), "bookingId");
             if (bookingId == null) {
                 view.displayError("❌ Thiếu ID đặt bàn cần hủy.");
                 return;
             }
-            boolean success = bookingService.cancelBooking(bookingId);
+            boolean success = context.getBookingService().cancelBooking(bookingId);
             if (success) {
                 view.displaySuccess("✅ Đã hủy đặt bàn #" + bookingId);
             } else {
@@ -268,19 +267,19 @@ public class AIActionHandlerRegistry {
     }
     public static class CompleteBookingHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer bookingId = AIResponseUtils.getInt(response.getParameters(), "bookingId");
             if (bookingId == null) {
                 view.displayError("❌ Thiếu ID đặt bàn cần hoàn thành.");
                 return;
             }
-            bookingService.completeBooking(bookingId);
+            context.getBookingService().completeBooking(bookingId);
             view.displaySuccess("✅ Đã hoàn thành đặt bàn #" + bookingId);
         }
     }
     public static class UpdateBookingHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer bookingId = AIResponseUtils.getInt(response.getParameters(), "bookingId");
             Integer guests = AIResponseUtils.getInt(response.getParameters(), "guests");
             String dateTime = AIResponseUtils.getString(response.getParameters(), "time");
@@ -288,7 +287,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu ID đặt bàn cần cập nhật.");
                 return;
             }
-            boolean success = bookingService.updateBooking(bookingId, guests != null ? String.valueOf(guests) : null, dateTime);
+            boolean success = context.getBookingService().updateBooking(bookingId, guests != null ? String.valueOf(guests) : null, dateTime);
             if (success) {
                 view.displaySuccess("✅ Đã cập nhật đặt bàn #" + bookingId);
             } else {
@@ -298,13 +297,13 @@ public class AIActionHandlerRegistry {
     }
     public static class DeleteBookingHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer bookingId = AIResponseUtils.getInt(response.getParameters(), "bookingId");
             if (bookingId == null) {
                 view.displayError("❌ Thiếu ID đặt bàn cần xóa.");
                 return;
             }
-            boolean success = bookingService.deleteBooking(bookingId);
+            boolean success = context.getBookingService().deleteBooking(bookingId);
             if (success) {
                 view.displaySuccess("✅ Đã xóa đặt bàn #" + bookingId);
             } else {
@@ -314,14 +313,14 @@ public class AIActionHandlerRegistry {
     }
     public static class FixDataHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
-            bookingService.fixBookingsWithNullCustomer();
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            context.getBookingService().fixBookingsWithNullCustomer();
             view.displaySuccess("✅ Đã kiểm tra và sửa các lỗi dữ liệu.");
         }
     }
     public static class CreateCustomerHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             String name = AIResponseUtils.getString(response.getParameters(), "customerName");
             String phone = AIResponseUtils.getString(response.getParameters(), "customerPhone");
             String email = AIResponseUtils.getString(response.getParameters(), "customerEmail");
@@ -329,7 +328,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu tên hoặc số điện thoại khách hàng.");
                 return;
             }
-            Customer customer = customerService.createCustomer(name, phone, email);
+            Customer customer = context.getCustomerService().createCustomer(name, phone, email);
             if (customer != null) {
                 view.displaySuccess("✅ Đã tạo khách hàng: " + name + " (" + phone + ")");
             } else {
@@ -339,7 +338,7 @@ public class AIActionHandlerRegistry {
     }
     public static class UpdateCustomerHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer customerId = AIResponseUtils.getInt(response.getParameters(), "customerId");
             String name = AIResponseUtils.getString(response.getParameters(), "customerName");
             String phone = AIResponseUtils.getString(response.getParameters(), "customerPhone");
@@ -348,7 +347,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu ID khách hàng cần cập nhật.");
                 return;
             }
-            boolean success = customerService.updateCustomer(customerId, name, phone, email);
+            boolean success = context.getCustomerService().updateCustomer(customerId, name, phone, email);
             if (success) {
                 view.displaySuccess("✅ Đã cập nhật khách hàng #" + customerId);
             } else {
@@ -358,13 +357,13 @@ public class AIActionHandlerRegistry {
     }
     public static class DeleteCustomerHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer customerId = AIResponseUtils.getInt(response.getParameters(), "customerId");
             if (customerId == null) {
                 view.displayError("❌ Thiếu ID khách hàng cần xóa.");
                 return;
             }
-            boolean success = customerService.deleteCustomer(customerId);
+            boolean success = context.getCustomerService().deleteCustomer(customerId);
             if (success) {
                 view.displaySuccess("✅ Đã xóa khách hàng #" + customerId);
             } else {
@@ -374,15 +373,15 @@ public class AIActionHandlerRegistry {
     }
     public static class GetCustomerInfoHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             Integer customerId = AIResponseUtils.getInt(response.getParameters(), "customerId");
             if (customerId == null) {
                 view.displayError("❌ Thiếu ID khách hàng cần xem thông tin.");
                 return;
             }
-            CustomerInfo customerInfo = customerService.getCustomerInfo(customerId);
+            CustomerInfo customerInfo = context.getCustomerService().getCustomerInfo(customerId);
             if (customerInfo != null) {
-                customerService.displayCustomerInfo(customerInfo);
+                context.getCustomerService().displayCustomerInfo(customerInfo);
             } else {
                 view.displayError("❌ Không tìm thấy khách hàng #" + customerId);
             }
@@ -390,13 +389,13 @@ public class AIActionHandlerRegistry {
     }
     public static class CustomerSearchHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             String searchTerm = AIResponseUtils.getString(response.getParameters(), "searchTerm");
             if (searchTerm == null || searchTerm.trim().isEmpty()) {
                 view.displayError("❌ Thiếu từ khóa tìm kiếm.");
                 return;
             }
-            java.util.List<Customer> results = customerService.searchCustomers(searchTerm);
+            java.util.List<Customer> results = context.getCustomerService().searchCustomers(searchTerm);
             if (results.isEmpty()) {
                 view.displayMessage("📝 Không tìm thấy khách hàng nào phù hợp với: " + searchTerm);
             } else {
@@ -409,7 +408,7 @@ public class AIActionHandlerRegistry {
     }
     public static class CreateBookingHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             String customerName = AIResponseUtils.getString(response.getParameters(), "customerName");
             String customerPhone = AIResponseUtils.getString(response.getParameters(), "customerPhone");
             Integer guests = AIResponseUtils.getInt(response.getParameters(), "guests");
@@ -421,7 +420,7 @@ public class AIActionHandlerRegistry {
             try {
                 Customer customer = new Customer(0, customerName, customerPhone);
                 java.time.LocalDateTime bookingTime = java.time.LocalDateTime.parse(dateTime, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-                Booking booking = bookingService.createBooking(customer, guests, bookingTime);
+                Booking booking = context.getBookingService().createBooking(customer, guests, bookingTime);
                 if (booking != null) {
                     view.displaySuccess("✅ Đã tạo đặt bàn #" + booking.getBookingId() + " cho " + customerName);
                 } else {
@@ -434,7 +433,7 @@ public class AIActionHandlerRegistry {
     }
     public static class AddMenuHandler implements AIActionHandler {
         @Override
-        public void handle(AIResponse response, OrderService orderService, BookingService bookingService, CustomerService customerService, ConsoleView view) {
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             String name = AIResponseUtils.getString(response.getParameters(), "name");
             Double price = AIResponseUtils.getDouble(response.getParameters(), "price");
             String description = AIResponseUtils.getString(response.getParameters(), "description");
@@ -442,7 +441,7 @@ public class AIActionHandlerRegistry {
                 view.displayError("❌ Thiếu thông tin tên hoặc giá món ăn.");
                 return;
             }
-            MenuItem newItem = orderService.addMenuItem(name, price, description != null ? description : "");
+            MenuItem newItem = context.getMenuService().addMenuItem(name, price, description != null ? description : "");
             if (newItem != null) {
                 view.displaySuccess("✅ Đã thêm món ăn mới: " + name + " - " + String.format("%.0f VND", price));
             } else {

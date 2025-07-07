@@ -26,6 +26,12 @@ public class CustomerService {
         this.customerSearchService = new CustomerSearchService();
     }
     
+    public CustomerService(TableService tableService, BookingValidator bookingValidator) {
+        this.customerFileService = new CustomerFileService();
+        this.bookingService = new BookingService(tableService, bookingValidator);
+        this.customerSearchService = new CustomerSearchService();
+    }
+    
     /**
      * Tạo khách hàng mới
      */

@@ -8,11 +8,11 @@ import restaurantbookingmanagement.view.*;
  * Controller quản lý menu items
  */
 public class MenuController {
-    private final OrderService orderService;
+    private final MenuService menuService;
     private final ConsoleView view;
     
-    public MenuController(OrderService orderService, ConsoleView view) {
-        this.orderService = orderService;
+    public MenuController(MenuService menuService, ConsoleView view) {
+        this.menuService = menuService;
         this.view = view;
     }
     
@@ -30,7 +30,7 @@ public class MenuController {
             @Override
             public void execute(int n) {
                 switch (n) {
-                    case 1 -> view.displayMenu(orderService.getAllMenuItems());
+                    case 1 -> view.displayMenu(menuService.getAllMenuItems());
                     case 2 -> addMenuItemMenu();
                     case 3 -> deleteMenuItemMenu();
                     case 4 -> editMenuItemMenu();
@@ -61,7 +61,7 @@ public class MenuController {
             view.displayMessage("Đã hủy thao tác thêm món ăn.");
             return;
         }
-        orderService.addMenuItem(name, price, desc);
+        menuService.addMenuItem(name, price, desc);
         view.displaySuccess("Đã thêm món ăn mới.");
     }
     
@@ -74,7 +74,7 @@ public class MenuController {
             view.displayMessage("Đã hủy thao tác xóa món ăn.");
             return;
         }
-        boolean deleted = orderService.deleteMenuItem(delId);
+        boolean deleted = menuService.deleteMenuItem(delId);
         if (deleted) view.displaySuccess("Đã xóa món ăn.");
         else view.displayError("Không tìm thấy món ăn với ID này.");
     }
@@ -103,7 +103,7 @@ public class MenuController {
             view.displayMessage("Đã hủy thao tác sửa món ăn.");
             return;
         }
-        boolean ok = orderService.updateMenuItem(editId, newName, priceStr, newDesc);
+        boolean ok = menuService.updateMenuItem(editId, newName, priceStr, newDesc);
         if (ok) view.displaySuccess("Đã cập nhật món ăn.");
         else view.displayError("Không tìm thấy món ăn hoặc giá không hợp lệ.");
     }
@@ -119,11 +119,11 @@ public class MenuController {
         }
         try {
             int id = Integer.parseInt(keyword);
-            MenuItem found = orderService.findMenuItemById(id);
+            MenuItem found = menuService.findMenuItemById(id);
             if (found != null) view.displayMessage(found.toString());
             else view.displayError("Không tìm thấy món ăn với ID này.");
         } catch (NumberFormatException e) {
-            MenuItem found = orderService.findMenuItemByName(keyword);
+            MenuItem found = menuService.findMenuItemByName(keyword);
             if (found != null) view.displayMessage(found.toString());
             else view.displayError("Không tìm thấy món ăn với tên này.");
         }
@@ -133,7 +133,7 @@ public class MenuController {
      * Hiển thị menu
      */
     public void displayMenu() {
-        view.displayMenu(orderService.getAllMenuItems());
+        view.displayMenu(menuService.getAllMenuItems());
     }
     
     /**

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import restaurantbookingmanagement.utils.DebugUtil;
 import restaurantbookingmanagement.service.fileservice.BookingFileService;
 import restaurantbookingmanagement.service.fileservice.CustomerFileService;
+import restaurantbookingmanagement.service.validator.BookingValidator;
 
 /**
  * Service xử lý logic nghiệp vụ đặt bàn
@@ -18,7 +19,7 @@ public class BookingService {
     private final TableService tableService;
     private int nextBookingId;
     
-    public BookingService(TableService tableService) {
+    public BookingService(TableService tableService, BookingValidator bookingValidator) {
         this.bookingFileService = new BookingFileService();
         this.customerFileService = new CustomerFileService();
         this.tableService = tableService;

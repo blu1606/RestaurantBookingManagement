@@ -1,14 +1,15 @@
 package restaurantbookingmanagement.service.search;
 
 import restaurantbookingmanagement.model.Customer;
+import restaurantbookingmanagement.service.CustomerService;
 import restaurantbookingmanagement.service.fileservice.CustomerFileService;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class CustomerSearchService {
     private final CustomerFileService customerFileService;
+    private CustomerService customerService;
 
     public CustomerSearchService() {
         this.customerFileService = new CustomerFileService();
@@ -24,5 +25,9 @@ public class CustomerSearchService {
                 .filter(c -> c.getName().toLowerCase().contains(lowerSearchTerm) ||
                            c.getPhone().contains(searchTerm))
                 .collect(Collectors.toList());
+    }
+
+    public void setCustomerService(CustomerService customerService) {
+        this.customerService = customerService;
     }
 } 

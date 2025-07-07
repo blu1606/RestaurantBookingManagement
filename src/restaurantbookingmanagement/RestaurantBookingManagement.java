@@ -7,6 +7,7 @@ package restaurantbookingmanagement;
 import restaurantbookingmanagement.service.*;
 import restaurantbookingmanagement.view.*;
 import restaurantbookingmanagement.controller.*;
+import restaurantbookingmanagement.service.validator.BookingValidator;
 
 /**
  * Main class - Entry point of the application
@@ -20,14 +21,17 @@ public class RestaurantBookingManagement {
     public static void main(String[] args) {
         try {
             // 1. Initialize Model (Services)
-            BookingService bookingService = new BookingService();
-            OrderService orderService = new OrderService();
+            TableService tableService = new TableService();
+            MenuService menuService = new MenuService();
+            BookingValidator bookingValidator = new BookingValidator();
+            BookingService bookingService = new BookingService(tableService, bookingValidator);
+            OrderService orderService = new OrderService(menuService);
 
             // 2. Initialize View
             ConsoleView view = new ConsoleView();
 
             // 3. Initialize Services
-            CustomerService customerService = new CustomerService();
+            CustomerService customerService = new CustomerService(tableService, bookingValidator);
             
             // 4. Initialize Controller and inject Model, View
             MainController controller = new MainController(bookingService, orderService, customerService, view);

@@ -3,7 +3,6 @@ package restaurantbookingmanagement.controller;
 import restaurantbookingmanagement.model.*;
 import restaurantbookingmanagement.service.*;
 import restaurantbookingmanagement.view.*;
-import restaurantbookingmanagement.utils.DebugUtil;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -19,14 +18,12 @@ public class UserController {
     private final ConsoleView view;
     private final AuthController authController;
     private final AiController aiController = new AiController();
-    private final AiService aiService = new AiService();
-    
-    // Thêm CustomerService
+        
+    // Thêm trường MenuService, TableService
+    private MenuService menuService;
+    private TableService tableService;
     private CustomerService customerService;
     
-    public void setCustomerService(CustomerService customerService) {
-        this.customerService = customerService;
-    }
     
     public UserController(BookingService bookingService, OrderService orderService, 
                         ConsoleView view, AuthController authController) {
@@ -54,9 +51,9 @@ public class UserController {
             @Override
             public void execute(int n) {
                 switch (n) {
-                    case 1 -> view.displayMenu(orderService.getAllMenuItems());
+                    case 1 -> view.displayMenu(menuService.getAllMenuItems());
                     case 2 -> view.displayListOrder(orderService.getAllOrders());
-                    case 3 -> view.displayTables(bookingService.getAllTables());
+                    case 3 -> view.displayTables(tableService.getAllTables());
                     case 4 -> handleUserBooking();
                     case 5 -> handleUserOrder();
                     case 6 -> handleUserCalculateBill();
@@ -75,7 +72,7 @@ public class UserController {
      */
     private void handleUserBooking() {
         view.displayMessage("--- Đặt Bàn ---");
-        view.displayTables(bookingService.getAllTables());
+        view.displayTables(tableService.getAllTables());
         Customer bookingCustomer = authController.getCurrentCustomer();
         String name, phone, email;
         if (bookingCustomer != null) {
@@ -126,7 +123,7 @@ public class UserController {
                 view.displayError("Định dạng ngày giờ không hợp lệ. Vui lòng thử lại.");
             }
         }
-        Table table = bookingService.findAvailableTable(guests);
+        Table table = tableService.findAvailableTable(guests);
         if (table == null) {
             view.displayError("Không có bàn phù hợp cho thời gian và số lượng khách này.");
             return;
@@ -173,7 +170,7 @@ public class UserController {
         // 2. Lấy order hiện tại cho booking
         Order order = orderService.getOrCreateOrderForBooking(currentBooking);
         // 3. Hiển thị menu và hỏi tên hoặc ID món
-        view.displayMenu(orderService.getAllMenuItems());
+        view.displayMenu(menuService.getAllMenuItems());
         String input = view.getInputHandler().getStringWithCancel("Nhập tên hoặc ID món:");
         if (input == null) {
             view.displayMessage("Đã hủy thao tác đặt món.");
@@ -182,9 +179,9 @@ public class UserController {
         MenuItem item = null;
         try {
             int id = Integer.parseInt(input);
-            item = orderService.findMenuItemById(id);
+            item = menuService.findMenuItemById(id);
         } catch (NumberFormatException e) {
-            item = orderService.findMenuItemByName(input);
+            item = menuService.findMenuItemByName(input);
         }
         if (item == null) {
             view.displayError("Không tìm thấy món ăn với tên hoặc ID này.");
@@ -530,5 +527,9 @@ public class UserController {
             view.displayError("Giá trị không hợp lệ. Vui lòng nhập số nguyên hoặc 'cancel' để hủy.");
             return getIntWithCancel(message);
         }
+    }
+
+    public void setCustomerService(CustomerService customerService) {
+        this.customerService = customerService;
     }
 } 

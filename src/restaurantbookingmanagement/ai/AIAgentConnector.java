@@ -318,13 +318,13 @@ public class AIAgentConnector {
     /**
      * Escape JSON string
      */
-    private String escapeJson(String input) {
-        return input.replace("\\", "\\\\")
-                   .replace("\"", "\\\"")
-                   .replace("\n", "\\n")
-                   .replace("\r", "\\r")
-                   .replace("\t", "\\t");
-    }
+    // private String escapeJson(String input) {
+    //     return input.replace("\\", "\\\\")
+    //                .replace("\"", "\\\"")
+    //                .replace("\n", "\\n")
+    //                .replace("\r", "\\r")
+    //                .replace("\t", "\\t");
+    // }
     
     /**
      * Tạo phản hồi lỗi

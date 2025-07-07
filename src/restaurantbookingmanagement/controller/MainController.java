@@ -12,20 +12,24 @@ public class MainController {
     private final UserController userController;
     private final ManagerController managerController;
     private final ConsoleView view;
+    private final MenuService menuService;
+    private final TableService tableService;
     
     public MainController(BookingService bookingService, OrderService orderService, 
                         CustomerService customerService, ConsoleView view) {
         this.view = view;
+        this.menuService = new MenuService();
+        this.tableService = new TableService();
         
         // Khởi tạo các controller
         this.authController = new AuthController(customerService, view);
         
         // Khởi tạo các controller con
-        MenuController menuController = new MenuController(orderService, view);
-        TableController tableController = new TableController(bookingService, view);
+        MenuController menuController = new MenuController(menuService, view);
+        TableController tableController = new TableController(tableService, view);
         CustomerController customerController = new CustomerController(customerService, view);
         BookingController bookingController = new BookingController(bookingService, view);
-        OrderController orderController = new OrderController(orderService, view);
+        OrderController orderController = new OrderController(orderService, view, menuService);
         
         // Khởi tạo user controller
         this.userController = new UserController(bookingService, orderService, view, authController);

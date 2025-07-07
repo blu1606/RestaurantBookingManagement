@@ -11,10 +11,12 @@ import java.util.List;
 public class OrderController {
     private final OrderService orderService;
     private final ConsoleView view;
+    private final MenuService menuService;
     
-    public OrderController(OrderService orderService, ConsoleView view) {
+    public OrderController(OrderService orderService, ConsoleView view, MenuService menuService) {
         this.orderService = orderService;
         this.view = view;
+        this.menuService = menuService;
     }
     
     /**
@@ -94,7 +96,7 @@ public class OrderController {
             view.displayMessage("Đã hủy thao tác thêm đơn hàng.");
             return;
         }
-        orderService.addOrder(name, price, desc);
+        menuService.addMenuItem(name, price, desc);
         view.displaySuccess("Đã thêm món ăn mới.");
     }
     
@@ -122,9 +124,9 @@ public class OrderController {
             view.displayMessage("Đã hủy thao tác sửa đơn hàng.");
             return;
         }
-        boolean ok = orderService.updateOrder(id, name, price, desc);
-        if (ok) view.displaySuccess("Đã cập nhật đơn hàng.");
-        else view.displayError("Không tìm thấy đơn hàng.");
+        boolean ok = menuService.updateMenuItem(id, name, price.toString(), desc);
+        if (ok) view.displaySuccess("Đã cập nhật món ăn.");
+        else view.displayError("Không tìm thấy món ăn hoặc giá không hợp lệ.");
     }
     
     /**
@@ -136,9 +138,9 @@ public class OrderController {
             view.displayMessage("Đã hủy thao tác xóa đơn hàng.");
             return;
         }
-        boolean deleted = orderService.deleteOrder(id);
-        if (deleted) view.displaySuccess("Đã xóa đơn hàng.");
-        else view.displayError("Không tìm thấy đơn hàng.");
+        boolean deleted = menuService.deleteMenuItem(id);
+        if (deleted) view.displaySuccess("Đã xóa món ăn.");
+        else view.displayError("Không tìm thấy món ăn với ID này.");
     }
     
     /**
@@ -276,7 +278,7 @@ public class OrderController {
      * Hiển thị menu
      */
     public void displayMenu() {
-        view.displayMenu(orderService.getAllMenuItems());
+        view.displayMenu(menuService.getAllMenuItems());
     }
     
     /**
