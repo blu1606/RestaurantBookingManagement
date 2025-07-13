@@ -5,12 +5,8 @@
   <h1 style="margin-top: 20px; font-family: 'Segoe UI', Arial, sans-serif; font-weight: bold; color: #fff; letter-spacing: 2px; text-align: center;">
     RESTAURANT BOOKING MANAGEMENT SYSTEM
   </h1>
-  <p style="margin-top: 8px; color: #ffd700; font-size: 1.1em; font-weight: 500; text-align: center;">
-    AI-Powered Dining, Seamless Booking
-  </p>
 </div>
 
-<p align="center"><h1 align="center">RESTAURANTBOOKINGMANAGEMENT</h1></p>
 <p align="center">
 	<em>Hệ thống quản lý đặt bàn, thực đơn, đơn hàng nhà hàng tích hợp AI Agent tiếng Việt</em>
 </p>
