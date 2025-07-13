@@ -1,23 +1,34 @@
-<div align="left" style="position: relative;">
-<img src="https://img.icons8.com/?size=512&id=55494&format=png" align="right" width="30%" style="margin: -20px 0 0 20px;">
-<h1>RESTAURANTBOOKINGMANAGEMENT</h1>
-<p align="left">
+<div align="center" style="margin-top: 24px;">
+  <img src="logo/logo.jpeg" 
+       alt="Restaurant Booking Management System Logo"
+       style="width: 180px; height: 180px; object-fit: cover; border-radius: 50%; box-shadow: 0 4px 16px rgba(0,0,0,0.15); border: 4px solid #fff; background: #fff;">
+  <h1 style="margin-top: 20px; font-family: 'Segoe UI', Arial, sans-serif; font-weight: bold; color: #fff; letter-spacing: 2px; text-align: center;">
+    RESTAURANT BOOKING MANAGEMENT SYSTEM
+  </h1>
+  <p style="margin-top: 8px; color: #ffd700; font-size: 1.1em; font-weight: 500; text-align: center;">
+    AI-Powered Dining, Seamless Booking
+  </p>
+</div>
+
+<p align="center">
+    <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" align="center" width="30%">
+</p>
+<p align="center"><h1 align="center">RESTAURANTBOOKINGMANAGEMENT</h1></p>
+<p align="center">
 	<em>Hệ thống quản lý đặt bàn, thực đơn, đơn hàng nhà hàng tích hợp AI Agent tiếng Việt</em>
 </p>
-<p align="left">
-	<img src="https://img.shields.io/github/license/blu1606/RestaurantBookingManagement?style=social&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
-	<img src="https://img.shields.io/github/last-commit/blu1606/RestaurantBookingManagement?style=social&logo=git&logoColor=white&color=0080ff" alt="last-commit">
-	<img src="https://img.shields.io/github/languages/top/blu1606/RestaurantBookingManagement?style=social&color=0080ff" alt="repo-top-language">
-	<img src="https://img.shields.io/github/languages/count/blu1606/RestaurantBookingManagement?style=social&color=0080ff" alt="repo-language-count">
+<p align="center">
+	<img src="https://img.shields.io/github/license/blu1606/RestaurantBookingManagement?style=default&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
+	<img src="https://img.shields.io/github/last-commit/blu1606/RestaurantBookingManagement?style=default&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+	<img src="https://img.shields.io/github/languages/top/blu1606/RestaurantBookingManagement?style=default&color=0080ff" alt="repo-top-language">
+	<img src="https://img.shields.io/github/languages/count/blu1606/RestaurantBookingManagement?style=default&color=0080ff" alt="repo-language-count">
 </p>
-<p align="left">Built with the tools and technologies:</p>
-<p align="left">
-	<img src="https://img.shields.io/badge/GNU%20Bash-4EAA25.svg?style=social&logo=GNU-Bash&logoColor=white" alt="GNU%20Bash">
-	<img src="https://img.shields.io/badge/Python-3776AB.svg?style=social&logo=Python&logoColor=white" alt="Python">
-	<img src="https://img.shields.io/badge/java-%23ED8B00.svg?style=social&logo=openjdk&logoColor=white" alt="java">
+<p align="center"><!-- default option, no dependency badges. -->
 </p>
-</div>
-<br clear="right">
+<p align="center">
+	<!-- default option, no dependency badges. -->
+</p>
+<br>
 
 ## 🔗 Table of Contents
 
@@ -43,7 +54,7 @@
 
 ---
 
-## �� Features
+##  Features
 
 - Đặt bàn, kiểm tra bàn trống, quản lý booking
 - Gợi ý món ăn, hiển thị thực đơn, tư vấn món phù hợp
