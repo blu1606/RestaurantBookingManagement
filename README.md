@@ -62,114 +62,46 @@
 ## 📁 Project Structure
 
 ```sh
-└── RestaurantBookingManagement/
-    ├── README.md
-    ├── ai_agent
-    │   ├── __init__.py
-    │   ├── agent_permissions.json
-    │   ├── agents
-    │   ├── app.py
-    │   ├── requirements.txt
-    │   ├── tools.json
-    │   └── tools_customer.json
-    ├── build.xml
-    ├── data
-    │   ├── bookings.json
-    │   ├── customers.json
-    │   ├── knowledge
-    │   ├── menu_items.json
-    │   ├── orders.json
-    │   └── tables.json
-    ├── lib
-    │   └── gson-2.10.1.jar
-    ├── manifest.mf
-    ├── nbproject
-    ├── run_ai.bat
-    ├── run_ai.sh
-    ├── run_memory.bat
-    └── src
-        └── restaurantbookingmanagement
+RestaurantBookingManagement/
+├── README.md
+├── ai_agent/                # Python AI Agent (RAG + LLM, Flask API)
+│   ├── agents/              # Core, specialized agents, utils
+│   ├── app.py               # Flask API entrypoint
+│   ├── requirements.txt     # Python dependencies
+│   ├── agent_permissions.json
+│   ├── tools.json
+│   └── tools_customer.json
+├── build.xml                # Ant build file for Java
+├── data/                    # Sample data (menu, bookings, customers, etc.)
+│   ├── bookings.json
+│   ├── customers.json
+│   ├── menu_items.json
+│   ├── orders.json
+│   ├── tables.json
+│   └── knowledge/           # Knowledge base for fallback, greeting, info
+├── lib/                     # Java libraries (e.g., gson)
+│   └── gson-2.10.1.jar
+├── manifest.mf
+├── nbproject/               # NetBeans project config
+├── run_ai.bat / run_ai.sh   # Scripts to run AI agent
+├── run_memory.bat
+└── src/
+    └── restaurantbookingmanagement/
+        ├── ai/             # Java-AI connector, handlers
+        ├── controller/     # Java MVC controllers
+        ├── model/          # Java data models (Booking, Customer, etc.)
+        ├── service/        # Business logic, file services, validators
+        ├── utils/          # Utility classes
+        └── view/           # Console view, DTOs
 ```
 
-### 📂 Project Index
-<details open>
-	<summary><b><code>RESTAURANTBOOKINGMANAGEMENT/</code></b></summary>
-	<details>
-		<summary><b>ai_agent</b></summary>
-		<blockquote>
-			- Python AI Agent (RAG + LLM, Flask API)
-			- Xử lý intent, routing, sinh phản hồi tự động
-		</blockquote>
-	</details>
-	<details>
-		<summary><b>src/restaurantbookingmanagement</b></summary>
-		<blockquote>
-			- Java Backend (MVC: Model, View, Controller)
-			- Xử lý nghiệp vụ, lưu trữ dữ liệu, API
-		</blockquote>
-	</details>
-	<details>
-		<summary><b>data</b></summary>
-		<blockquote>
-			- Dữ liệu mẫu: menu, booking, khách hàng, bàn, đơn hàng
-		</blockquote>
-	</details>
-</details>
-
----
-
-## 🚀 Getting Started
-
-### ☑️ Prerequisites
-
-- **Java 8+**
-- **Python 3.8+**
-- **pip**
-
-### ⚙️ Installation
-
-1. Clone repository:
-```sh
-git clone https://github.com/blu1606/RestaurantBookingManagement
-cd RestaurantBookingManagement
-```
-2. Cài đặt Python dependencies:
-```sh
-cd ai_agent
-pip install -r requirements.txt
-```
-3. Build Java backend (NetBeans hoặc dòng lệnh):
-```sh
-# Mở project bằng NetBeans và build, hoặc:
-cd ..
-ant
-```
-
-### 🤖 Usage
-
-- Chạy AI Agent (Python):
-```sh
-cd ai_agent
-python app.py
-```
-- Chạy Java backend:
-```sh
-# Chạy từ NetBeans hoặc dòng lệnh:
-cd src
-# hoặc chạy file RestaurantBookingManagement.java
-```
-
-### 🧪 Testing
-
-- Chạy test cho Python (nếu có):
-```sh
-cd ai_agent
-pytest
-```
-- Chạy test cho Java (nếu có):
-```sh
-# Sử dụng NetBeans hoặc dòng lệnh
-```
+**Chú thích:**
+- `ai_agent/`: Toàn bộ mã nguồn Python AI Agent, xử lý ngôn ngữ tự nhiên, intent, routing, sinh phản hồi.
+- `src/restaurantbookingmanagement/`: Mã nguồn Java backend, theo mô hình MVC, quản lý nghiệp vụ, dữ liệu, API.
+- `data/`: Dữ liệu mẫu cho menu, booking, khách hàng, đơn hàng, bàn.
+- `lib/`: Thư viện Java bên ngoài.
+- `nbproject/`: Cấu hình NetBeans IDE.
+- `run_ai.bat`, `run_ai.sh`: Script chạy AI agent nhanh.
 
 ---
 
@@ -221,12 +153,13 @@ pytest
 
 ```mermaid
 graph TD
-    subgraph Java Backend (MVC)
+    subgraph "Java Backend (MVC)"
         A[Model]
-        B[View]
+        B[View] 
         C[Controller]
     end
-    subgraph Python AI Agent (RAG + LLM)
+    
+    subgraph "Python AI Agent (RAG + LLM)"
         D[BaseAgent]
         E[SpecializedAgents]
         F[ToolDetector]
@@ -234,16 +167,32 @@ graph TD
         H[GeminiLLM]
         I[FlaskAPI]
     end
-    Frontend -.->|HTTP API| I
-    I <--> C
-    C <--> A
-    C <--> B
-    I <--> D
-    D <--> E
-    D <--> F
-    D <--> G
-    D <--> H
+    
+    subgraph "Frontend"
+        J[User Interface]
+    end
+    
+    %% Connections
+    J -.->|HTTP Request| I
+    I <-->|API Call| C
+    C <-->|Data Access| A
+    C <-->|Render| B
+    I <-->|Process| D
+    D <-->|Delegate| E
+    D <-->|Detect Tools| F
+    D <-->|Query/Store| G
+    D <-->|Generate| H
+    
+    %% Styling
+    classDef javaClass fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef pythonClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef frontendClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    
+    class A,B,C javaClass
+    class D,E,F,G,H,I pythonClass
+    class J frontendClass
 ```
+
 
 ---
 
@@ -251,24 +200,111 @@ graph TD
 
 ```mermaid
 erDiagram
-    CUSTOMER ||--o{ BOOKING : has
-    CUSTOMER ||--o{ ORDER : places
-    BOOKING ||--o{ TABLE : reserves
-    ORDER ||--o{ MENU_ITEM : contains
-    TABLE ||--o{ BOOKING : assigned
-    MENU_ITEM ||--o{ ORDER : in
+    CUSTOMER {
+        int customer_id PK
+        string name
+        string email
+        string phone
+        datetime created_at
+    }
+    
+    BOOKING {
+        int booking_id PK
+        int customer_id FK
+        int table_id FK
+        datetime booking_date
+        int party_size
+        string status
+    }
+    
+    TABLE {
+        int table_id PK
+        string table_number
+        int capacity
+        string location
+        string status
+    }
+    
+    ORDER {
+        int order_id PK
+        int customer_id FK
+        int booking_id FK
+        datetime order_date
+        decimal total_amount
+        string status
+    }
+    
+    MENU_ITEM {
+        int item_id PK
+        string name
+        string description
+        decimal price
+        string category
+        boolean available
+    }
+    
+    ORDER_ITEM {
+        int order_item_id PK
+        int order_id FK
+        int item_id FK
+        int quantity
+        decimal unit_price
+        decimal subtotal
+    }
+    
+    %% Relationships
+    CUSTOMER ||--o{ BOOKING : "makes"
+    CUSTOMER ||--o{ ORDER : "places"
+    BOOKING ||--|| TABLE : "reserves"
+    ORDER ||--o{ ORDER_ITEM : "contains"
+    MENU_ITEM ||--o{ ORDER_ITEM : "included_in"
+    BOOKING ||--o{ ORDER : "generates"
 ```
 
 ---
 
 ## 👤 User Flow
 
-1. Người dùng đăng nhập/đăng ký (nếu có)
-2. Xem menu, hỏi món, nhận gợi ý từ AI
-3. Đặt bàn, kiểm tra bàn trống
-4. Đặt món, kiểm tra đơn hàng
-5. Hủy bàn, gửi phản hồi
-6. Nhận thông báo xác nhận, trạng thái qua console/API
+```mermaid
+flowchart LR
+    A[Truy cập] --> B{Đăng nhập?}
+    B -->|Chưa| C[Đăng ký/Đăng nhập]
+    B -->|Rồi| D[Xem menu]
+    C --> D
+    
+    D --> E[Hỏi AI & Gợi ý]
+    E --> F[Đặt bàn]
+    F --> G{Bàn trống?}
+    G -->|Không| H[Chọn giờ khác]
+    H --> G
+    G -->|Có| I[Đặt món]
+    
+    I --> J{Đơn OK?}
+    J -->|Không| K[Chỉnh sửa]
+    K --> J
+    J -->|OK| L[Xác nhận]
+    
+    L --> M[Thông báo & Theo dõi]
+    M --> N{Thay đổi?}
+    N -->|Hủy| O[Hủy bàn]
+    N -->|Phản hồi| P[Gửi feedback]
+    N -->|Không| Q[Hoàn thành]
+    O --> Q
+    P --> Q
+    
+    %% Styling
+    classDef startEnd fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef process fill:#e3f2fd,stroke:#0277bd,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef aiProcess fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef notification fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class A,Z startEnd
+    class C,D,H,I,L,M,N,P,Q,U,V,W,X,Y process
+    class B,G,J,O,T decision
+    class E,F aiProcess
+    class R,S notification
+```
 
 ---
 
@@ -302,3 +338,425 @@ MIT License
 - Chroma/FAISS VectorDB
 - NetBeans, Flask, Python, Java
 - Icons8 
+
+### 📂 Project Index
+<details open>
+	<summary><b><code>RESTAURANTBOOKINGMANAGEMENT/</code></b></summary>
+	<details> <!-- __root__ Submodule -->
+		<summary><b>__root__</b></summary>
+		<blockquote>
+			<table>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/run_ai.sh'>run_ai.sh</a></b></td>
+				<td><code>Script chạy AI Agent (Linux/Mac)</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/run_ai.bat'>run_ai.bat</a></b></td>
+				<td><code>Script chạy AI Agent (Windows)</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/run_memory.bat'>run_memory.bat</a></b></td>
+				<td><code>Script chạy memory agent</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/manifest.mf'>manifest.mf</a></b></td>
+				<td><code>Java manifest file</code></td>
+			</tr>
+			</table>
+		</blockquote>
+	</details>
+	<details> <!-- ai_agent Submodule -->
+		<summary><b>ai_agent</b></summary>
+		<blockquote>
+			<table>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agent_permissions.json'>agent_permissions.json</a></b></td>
+				<td><code>Phân quyền cho AI Agent</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/tools.json'>tools.json</a></b></td>
+				<td><code>Định nghĩa tool cho agent</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/app.py'>app.py</a></b></td>
+				<td><code>Flask API entrypoint</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/tools_customer.json'>tools_customer.json</a></b></td>
+				<td><code>Tool cho khách hàng</code></td>
+			</tr>
+			<tr>
+				<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/requirements.txt'>requirements.txt</a></b></td>
+				<td><code>Python dependencies</code></td>
+			</tr>
+			</table>
+			<details>
+				<summary><b>agents</b></summary>
+				<blockquote>
+					<details>
+						<summary><b>core</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/core/base_agent.py'>base_agent.py</a></b></td>
+								<td><code>Base class cho AI Agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/core/agent_manager.py'>agent_manager.py</a></b></td>
+								<td><code>Quản lý agent, routing</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/core/router_ai.py'>router_ai.py</a></b></td>
+								<td><code>RouterAI: phân tích intent</code></td>
+							</tr>
+							</table>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>utils</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/utils/tool_detector.py'>tool_detector.py</a></b></td>
+								<td><code>ToolDetector: vector search</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/utils/rate_limiter.py'>rate_limiter.py</a></b></td>
+								<td><code>Rate limiter cho API</code></td>
+							</tr>
+							</table>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>specialized</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/fallback_agent.py'>fallback_agent.py</a></b></td>
+								<td><code>Fallback agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/order_agent.py'>order_agent.py</a></b></td>
+								<td><code>Order agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/booking_agent.py'>booking_agent.py</a></b></td>
+								<td><code>Booking agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/greeting_agent.py'>greeting_agent.py</a></b></td>
+								<td><code>Greeting agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/information_agent.py'>information_agent.py</a></b></td>
+								<td><code>Information agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/feedback_agent.py'>feedback_agent.py</a></b></td>
+								<td><code>Feedback agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/menu_agent.py'>menu_agent.py</a></b></td>
+								<td><code>Menu agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/ai_agent/agents/specialized/cancellation_agent.py'>cancellation_agent.py</a></b></td>
+								<td><code>Cancellation agent</code></td>
+							</tr>
+							</table>
+						</blockquote>
+					</details>
+				</blockquote>
+			</details>
+		</blockquote>
+	</details>
+	<details> <!-- src Submodule -->
+		<summary><b>src</b></summary>
+		<blockquote>
+			<details>
+				<summary><b>restaurantbookingmanagement</b></summary>
+				<blockquote>
+					<table>
+					<tr>
+						<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/TestFunctionality.java'>TestFunctionality.java</a></b></td>
+						<td><code>Test chức năng tổng hợp</code></td>
+					</tr>
+					<tr>
+						<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/RestaurantBookingManagement.java'>RestaurantBookingManagement.java</a></b></td>
+						<td><code>Java main entrypoint</code></td>
+					</tr>
+					</table>
+					<details>
+						<summary><b>model</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/CustomerInfo.java'>CustomerInfo.java</a></b></td>
+								<td><code>Thông tin khách hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/Table.java'>Table.java</a></b></td>
+								<td><code>Thông tin bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/Order.java'>Order.java</a></b></td>
+								<td><code>Đơn hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/Customer.java'>Customer.java</a></b></td>
+								<td><code>Khách hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/Booking.java'>Booking.java</a></b></td>
+								<td><code>Đặt bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/TableStatus.java'>TableStatus.java</a></b></td>
+								<td><code>Trạng thái bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/MenuItem.java'>MenuItem.java</a></b></td>
+								<td><code>Món ăn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/model/Role.java'>Role.java</a></b></td>
+								<td><code>Vai trò</code></td>
+							</tr>
+							</table>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>view</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/view/Menu.java'>Menu.java</a></b></td>
+								<td><code>Hiển thị menu</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/view/ConsoleView.java'>ConsoleView.java</a></b></td>
+								<td><code>Giao diện console</code></td>
+							</tr>
+							</table>
+							<details>
+								<summary><b>dto</b></summary>
+								<blockquote>
+									<table>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/view/dto/BookingRequest.java'>BookingRequest.java</a></b></td>
+										<td><code>DTO đặt bàn</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/view/dto/OrderRequest.java'>OrderRequest.java</a></b></td>
+										<td><code>DTO gọi món</code></td>
+									</tr>
+									</table>
+								</blockquote>
+							</details>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>ai</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/ai/AIAgentConnector.java'>AIAgentConnector.java</a></b></td>
+								<td><code>Kết nối Java-AI</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/ai/AIResponse.java'>AIResponse.java</a></b></td>
+								<td><code>Định nghĩa response AI</code></td>
+							</tr>
+							</table>
+							<details>
+								<summary><b>handlers</b></summary>
+								<blockquote>
+									<table>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/ai/handlers/AIActionHandler.java'>AIActionHandler.java</a></b></td>
+										<td><code>Xử lý action AI</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/ai/handlers/ServiceContext.java'>ServiceContext.java</a></b></td>
+										<td><code>Context dịch vụ</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/ai/handlers/AIActionHandlerRegistry.java'>AIActionHandlerRegistry.java</a></b></td>
+										<td><code>Đăng ký handler</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/ai/handlers/AIResponseUtils.java'>AIResponseUtils.java</a></b></td>
+										<td><code>Tiện ích response AI</code></td>
+									</tr>
+									</table>
+								</blockquote>
+							</details>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>utils</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/utils/InputHandler.java'>InputHandler.java</a></b></td>
+								<td><code>Xử lý input</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/utils/LocalDateTimeAdapter.java'>LocalDateTimeAdapter.java</a></b></td>
+								<td><code>Chuyển đổi thời gian</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/utils/DebugUtil.java'>DebugUtil.java</a></b></td>
+								<td><code>Tiện ích debug</code></td>
+							</tr>
+							</table>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>controller</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/CustomerController.java'>CustomerController.java</a></b></td>
+								<td><code>Quản lý khách hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/MenuController.java'>MenuController.java</a></b></td>
+								<td><code>Quản lý menu</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/BookingController.java'>BookingController.java</a></b></td>
+								<td><code>Quản lý đặt bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/TableController.java'>TableController.java</a></b></td>
+								<td><code>Quản lý bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/ManagerController.java'>ManagerController.java</a></b></td>
+								<td><code>Quản lý manager</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/OrderController.java'>OrderController.java</a></b></td>
+								<td><code>Quản lý đơn hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/AuthController.java'>AuthController.java</a></b></td>
+								<td><code>Xác thực người dùng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/AiController.java'>AiController.java</a></b></td>
+								<td><code>Kết nối AI Agent</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/UserController.java'>UserController.java</a></b></td>
+								<td><code>Quản lý user</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/controller/MainController.java'>MainController.java</a></b></td>
+								<td><code>Main controller</code></td>
+							</tr>
+							</table>
+						</blockquote>
+					</details>
+					<details>
+						<summary><b>service</b></summary>
+						<blockquote>
+							<table>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/OrderService.java'>OrderService.java</a></b></td>
+								<td><code>Xử lý đơn hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/BookingService.java'>BookingService.java</a></b></td>
+								<td><code>Xử lý đặt bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/TableService.java'>TableService.java</a></b></td>
+								<td><code>Xử lý bàn</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/CustomerService.java'>CustomerService.java</a></b></td>
+								<td><code>Xử lý khách hàng</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/MenuService.java'>MenuService.java</a></b></td>
+								<td><code>Xử lý menu</code></td>
+							</tr>
+							<tr>
+								<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/AiService.java'>AiService.java</a></b></td>
+								<td><code>Kết nối AI</code></td>
+							</tr>
+							</table>
+							<details>
+								<summary><b>fileservice</b></summary>
+								<blockquote>
+									<table>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/fileservice/TableFileService.java'>TableFileService.java</a></b></td>
+										<td><code>Lưu trữ bàn</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/fileservice/BookingFileService.java'>BookingFileService.java</a></b></td>
+										<td><code>Lưu trữ booking</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/fileservice/FileServiceBase.java'>FileServiceBase.java</a></b></td>
+										<td><code>Base file service</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/fileservice/CustomerFileService.java'>CustomerFileService.java</a></b></td>
+										<td><code>Lưu trữ khách hàng</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/fileservice/MenuItemFileService.java'>MenuItemFileService.java</a></b></td>
+										<td><code>Lưu trữ menu</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/fileservice/OrderFileService.java'>OrderFileService.java</a></b></td>
+										<td><code>Lưu trữ đơn hàng</code></td>
+									</tr>
+									</table>
+								</blockquote>
+							</details>
+							<details>
+								<summary><b>validator</b></summary>
+								<blockquote>
+									<table>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/validator/OrderValidator.java'>OrderValidator.java</a></b></td>
+										<td><code>Validate đơn hàng</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/validator/CustomerValidator.java'>CustomerValidator.java</a></b></td>
+										<td><code>Validate khách hàng</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/validator/BookingValidator.java'>BookingValidator.java</a></b></td>
+										<td><code>Validate booking</code></td>
+									</tr>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/validator/TableValidator.java'>TableValidator.java</a></b></td>
+										<td><code>Validate bàn</code></td>
+									</tr>
+									</table>
+								</blockquote>
+							</details>
+							<details>
+								<summary><b>search</b></summary>
+								<blockquote>
+									<table>
+									<tr>
+										<td><b><a href='https://github.com/blu1606/RestaurantBookingManagement/blob/master/src/restaurantbookingmanagement/service/search/CustomerSearchService.java'>CustomerSearchService.java</a></b></td>
+										<td><code>Tìm kiếm khách hàng</code></td>
+									</tr>
+									</table>
+								</blockquote>
+							</details>
+						</blockquote>
+					</details>
+				</blockquote>
+			</details>
+		</blockquote>
+	</details>
+</details> 
