@@ -105,240 +105,6 @@ RestaurantBookingManagement/
 
 ---
 
-## 🧠 Giải thích về AI Agent, mô hình & luồng hoạt động
-
-### 1. **AI Routing (RouterAI)**
-- **RouterAI** là thành phần trung tâm chịu trách nhiệm phân tích ý định (intent) của người dùng và điều hướng (route) yêu cầu đến agent chuyên biệt phù hợp.
-- **Cách hoạt động:**
-  1. Nhận input tiếng Việt tự nhiên từ người dùng.
-  2. Sử dụng mô hình Gemini LLM để phân tích ý định (intent classification) dựa trên prompt và ví dụ intent.
-  3. Mapping intent sang agent chuyên biệt (ví dụ: intent "menu_recommendation" → MenuAgent).
-  4. Trả về agent, intent, confidence cho AgentManager để xử lý tiếp.
-- **Các intent chính:**
-  - greeting: Chào hỏi, giới thiệu
-  - menu_recommendation: Gợi ý món ăn, hỏi menu
-  - booking: Đặt bàn, kiểm tra bàn trống
-  - cancellation: Hủy bàn
-  - order: Đặt món, kiểm tra đơn hàng
-  - feedback: Góp ý, đánh giá
-  - information: Hỏi thông tin nhà hàng
-  - fallback: Xử lý câu hỏi ngoài phạm vi
-- **Ví dụ routing:**
-  - "Tôi muốn đặt bàn cho 2 người tối nay" → intent: booking → BookingAgent
-  - "Có món phở không?" → intent: menu_recommendation → MenuAgent
-
-### 2. **Luồng hoạt động tổng thể**
-
-1. Người dùng nhập câu hỏi/nhu cầu tự nhiên (console hoặc API).
-2. Java backend nhận request, chuyển tiếp tới Python AI Agent qua HTTP API.
-3. AI Agent (RouterAI) phân tích intent, chọn agent chuyên biệt.
-4. Agent chuyên biệt truy vấn dữ liệu (menu, booking, v.v.), sinh phản hồi tự động.
-5. Kết quả trả về Java backend, hiển thị cho người dùng.
-
-### 3. **Các mô hình & công nghệ AI**
-- **Gemini LLM**: Xử lý ngôn ngữ tự nhiên, phân tích intent, sinh phản hồi.
-- **RAG (Retrieval-Augmented Generation)**: Kết hợp truy vấn dữ liệu thực tế (menu, booking, knowledge) với LLM để trả lời chính xác, sát nghiệp vụ.
-- **Vector Search (FAISS/Chroma)**: Tìm kiếm ngữ nghĩa nhanh trên tập tool/data.
-
-### 4. **Design Pattern sử dụng**
-- **MVC (Java backend):** Phân tách Model, View, Controller rõ ràng.
-- **Agent Pattern (Python):** Mỗi nghiệp vụ là một agent chuyên biệt, quản lý bởi AgentManager.
-- **Singleton (ToolDetector):** Đảm bảo chỉ có một instance quản lý tool embeddings.
-- **Factory/Registry (AIActionHandlerRegistry):** Đăng ký và gọi handler động theo action.
-- **Strategy (Routing):** RouterAI chọn chiến lược agent phù hợp theo intent.
-
----
-
-## 🏗️ Sơ đồ kiến trúc hệ thống
-
-```mermaid
-graph TD
-    subgraph "Java Backend (MVC)"
-        A[Model]
-        B[View] 
-        C[Controller]
-    end
-    
-    subgraph "Python AI Agent (RAG + LLM)"
-        D[BaseAgent]
-        E[SpecializedAgents]
-        F[ToolDetector]
-        G[VectorDB]
-        H[GeminiLLM]
-        I[FlaskAPI]
-    end
-    
-    subgraph "Frontend"
-        J[User Interface]
-    end
-    
-    %% Connections
-    J -.->|HTTP Request| I
-    I <-->|API Call| C
-    C <-->|Data Access| A
-    C <-->|Render| B
-    I <-->|Process| D
-    D <-->|Delegate| E
-    D <-->|Detect Tools| F
-    D <-->|Query/Store| G
-    D <-->|Generate| H
-    
-    %% Styling
-    classDef javaClass fill:#e1f5fe,stroke:#01579b,stroke-width:2px
-    classDef pythonClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
-    classDef frontendClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    
-    class A,B,C javaClass
-    class D,E,F,G,H,I pythonClass
-    class J frontendClass
-```
-
-
----
-
-## 🗂️ ERD (Entity Relationship Diagram)
-
-```mermaid
-erDiagram
-    CUSTOMER {
-        int customer_id PK
-        string name
-        string email
-        string phone
-        datetime created_at
-    }
-    
-    BOOKING {
-        int booking_id PK
-        int customer_id FK
-        int table_id FK
-        datetime booking_date
-        int party_size
-        string status
-    }
-    
-    TABLE {
-        int table_id PK
-        string table_number
-        int capacity
-        string location
-        string status
-    }
-    
-    ORDER {
-        int order_id PK
-        int customer_id FK
-        int booking_id FK
-        datetime order_date
-        decimal total_amount
-        string status
-    }
-    
-    MENU_ITEM {
-        int item_id PK
-        string name
-        string description
-        decimal price
-        string category
-        boolean available
-    }
-    
-    ORDER_ITEM {
-        int order_item_id PK
-        int order_id FK
-        int item_id FK
-        int quantity
-        decimal unit_price
-        decimal subtotal
-    }
-    
-    %% Relationships
-    CUSTOMER ||--o{ BOOKING : "makes"
-    CUSTOMER ||--o{ ORDER : "places"
-    BOOKING ||--|| TABLE : "reserves"
-    ORDER ||--o{ ORDER_ITEM : "contains"
-    MENU_ITEM ||--o{ ORDER_ITEM : "included_in"
-    BOOKING ||--o{ ORDER : "generates"
-```
-
----
-
-## 👤 User Flow
-
-```mermaid
-flowchart LR
-    A[Truy cập] --> B{Đăng nhập?}
-    B -->|Chưa| C[Đăng ký/Đăng nhập]
-    B -->|Rồi| D[Xem menu]
-    C --> D
-    
-    D --> E[Hỏi AI & Gợi ý]
-    E --> F[Đặt bàn]
-    F --> G{Bàn trống?}
-    G -->|Không| H[Chọn giờ khác]
-    H --> G
-    G -->|Có| I[Đặt món]
-    
-    I --> J{Đơn OK?}
-    J -->|Không| K[Chỉnh sửa]
-    K --> J
-    J -->|OK| L[Xác nhận]
-    
-    L --> M[Thông báo & Theo dõi]
-    M --> N{Thay đổi?}
-    N -->|Hủy| O[Hủy bàn]
-    N -->|Phản hồi| P[Gửi feedback]
-    N -->|Không| Q[Hoàn thành]
-    O --> Q
-    P --> Q
-    
-    %% Styling
-    classDef startEnd fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
-    classDef process fill:#e3f2fd,stroke:#0277bd,stroke-width:2px
-    classDef decision fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef aiProcess fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    classDef notification fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    
-    class A,Z startEnd
-    class C,D,H,I,L,M,N,P,Q,U,V,W,X,Y process
-    class B,G,J,O,T decision
-    class E,F aiProcess
-    class R,S notification
-```
-
----
-
-## 📌 Project Roadmap
-
-- [X] Đặt bàn, quản lý booking
-- [X] Gợi ý món ăn, menu
-- [X] Quản lý đơn hàng, khách hàng
-- [X] Tích hợp AI Agent tiếng Việt
-- [ ] Giao diện web/mobile
-- [ ] Tích hợp thanh toán online
-- [ ] Báo cáo, thống kê nâng cao
-
----
-
-## 🔰 Contributing
-
-Đóng góp ý kiến, pull request, hoặc báo lỗi qua GitHub Issues.
-
----
-
-## 🎗 License
-
-MIT License
-
----
-
-## 🙌 Acknowledgments
-
-- Gemini LLM, Google
-- Chroma/FAISS VectorDB
-- NetBeans, Flask, Python, Java
-- Icons8 
-
 ### 📂 Project Index
 <details open>
 	<summary><b><code>RESTAURANTBOOKINGMANAGEMENT/</code></b></summary>
@@ -760,3 +526,240 @@ MIT License
 		</blockquote>
 	</details>
 </details> 
+
+---
+
+## 🧠 Giải thích về AI Agent, mô hình & luồng hoạt động
+
+### 1. **AI Routing (RouterAI)**
+- **RouterAI** là thành phần trung tâm chịu trách nhiệm phân tích ý định (intent) của người dùng và điều hướng (route) yêu cầu đến agent chuyên biệt phù hợp.
+- **Cách hoạt động:**
+  1. Nhận input tiếng Việt tự nhiên từ người dùng.
+  2. Sử dụng mô hình Gemini LLM để phân tích ý định (intent classification) dựa trên prompt và ví dụ intent.
+  3. Mapping intent sang agent chuyên biệt (ví dụ: intent "menu_recommendation" → MenuAgent).
+  4. Trả về agent, intent, confidence cho AgentManager để xử lý tiếp.
+- **Các intent chính:**
+  - greeting: Chào hỏi, giới thiệu
+  - menu_recommendation: Gợi ý món ăn, hỏi menu
+  - booking: Đặt bàn, kiểm tra bàn trống
+  - cancellation: Hủy bàn
+  - order: Đặt món, kiểm tra đơn hàng
+  - feedback: Góp ý, đánh giá
+  - information: Hỏi thông tin nhà hàng
+  - fallback: Xử lý câu hỏi ngoài phạm vi
+- **Ví dụ routing:**
+  - "Tôi muốn đặt bàn cho 2 người tối nay" → intent: booking → BookingAgent
+  - "Có món phở không?" → intent: menu_recommendation → MenuAgent
+
+### 2. **Luồng hoạt động tổng thể**
+
+1. Người dùng nhập câu hỏi/nhu cầu tự nhiên (console hoặc API).
+2. Java backend nhận request, chuyển tiếp tới Python AI Agent qua HTTP API.
+3. AI Agent (RouterAI) phân tích intent, chọn agent chuyên biệt.
+4. Agent chuyên biệt truy vấn dữ liệu (menu, booking, v.v.), sinh phản hồi tự động.
+5. Kết quả trả về Java backend, hiển thị cho người dùng.
+
+### 3. **Các mô hình & công nghệ AI**
+- **Gemini LLM**: Xử lý ngôn ngữ tự nhiên, phân tích intent, sinh phản hồi.
+- **RAG (Retrieval-Augmented Generation)**: Kết hợp truy vấn dữ liệu thực tế (menu, booking, knowledge) với LLM để trả lời chính xác, sát nghiệp vụ.
+- **Vector Search (FAISS/Chroma)**: Tìm kiếm ngữ nghĩa nhanh trên tập tool/data.
+
+### 4. **Design Pattern sử dụng**
+- **MVC (Java backend):** Phân tách Model, View, Controller rõ ràng.
+- **Agent Pattern (Python):** Mỗi nghiệp vụ là một agent chuyên biệt, quản lý bởi AgentManager.
+- **Singleton (ToolDetector):** Đảm bảo chỉ có một instance quản lý tool embeddings.
+- **Factory/Registry (AIActionHandlerRegistry):** Đăng ký và gọi handler động theo action.
+- **Strategy (Routing):** RouterAI chọn chiến lược agent phù hợp theo intent.
+
+---
+
+## 🏗️ Sơ đồ kiến trúc hệ thống
+
+```mermaid
+graph TD
+    subgraph "Java Backend (MVC)"
+        A[Model]
+        B[View] 
+        C[Controller]
+    end
+    
+    subgraph "Python AI Agent (RAG + LLM)"
+        D[BaseAgent]
+        E[SpecializedAgents]
+        F[ToolDetector]
+        G[VectorDB]
+        H[GeminiLLM]
+        I[FlaskAPI]
+    end
+    
+    subgraph "Frontend"
+        J[User Interface]
+    end
+    
+    %% Connections
+    J -.->|HTTP Request| I
+    I <-->|API Call| C
+    C <-->|Data Access| A
+    C <-->|Render| B
+    I <-->|Process| D
+    D <-->|Delegate| E
+    D <-->|Detect Tools| F
+    D <-->|Query/Store| G
+    D <-->|Generate| H
+    
+    %% Styling
+    classDef javaClass fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef pythonClass fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef frontendClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    
+    class A,B,C javaClass
+    class D,E,F,G,H,I pythonClass
+    class J frontendClass
+```
+
+
+---
+
+## 🗂️ ERD (Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    CUSTOMER {
+        int customer_id PK
+        string name
+        string email
+        string phone
+        datetime created_at
+    }
+    
+    BOOKING {
+        int booking_id PK
+        int customer_id FK
+        int table_id FK
+        datetime booking_date
+        int party_size
+        string status
+    }
+    
+    TABLE {
+        int table_id PK
+        string table_number
+        int capacity
+        string location
+        string status
+    }
+    
+    ORDER {
+        int order_id PK
+        int customer_id FK
+        int booking_id FK
+        datetime order_date
+        decimal total_amount
+        string status
+    }
+    
+    MENU_ITEM {
+        int item_id PK
+        string name
+        string description
+        decimal price
+        string category
+        boolean available
+    }
+    
+    ORDER_ITEM {
+        int order_item_id PK
+        int order_id FK
+        int item_id FK
+        int quantity
+        decimal unit_price
+        decimal subtotal
+    }
+    
+    %% Relationships
+    CUSTOMER ||--o{ BOOKING : "makes"
+    CUSTOMER ||--o{ ORDER : "places"
+    BOOKING ||--|| TABLE : "reserves"
+    ORDER ||--o{ ORDER_ITEM : "contains"
+    MENU_ITEM ||--o{ ORDER_ITEM : "included_in"
+    BOOKING ||--o{ ORDER : "generates"
+```
+
+---
+
+## 👤 User Flow
+
+```mermaid
+flowchart LR
+    A[Truy cập] --> B{Đăng nhập?}
+    B -->|Chưa| C[Đăng ký/Đăng nhập]
+    B -->|Rồi| D[Xem menu]
+    C --> D
+    
+    D --> E[Hỏi AI & Gợi ý]
+    E --> F[Đặt bàn]
+    F --> G{Bàn trống?}
+    G -->|Không| H[Chọn giờ khác]
+    H --> G
+    G -->|Có| I[Đặt món]
+    
+    I --> J{Đơn OK?}
+    J -->|Không| K[Chỉnh sửa]
+    K --> J
+    J -->|OK| L[Xác nhận]
+    
+    L --> M[Thông báo & Theo dõi]
+    M --> N{Thay đổi?}
+    N -->|Hủy| O[Hủy bàn]
+    N -->|Phản hồi| P[Gửi feedback]
+    N -->|Không| Q[Hoàn thành]
+    O --> Q
+    P --> Q
+    
+    %% Styling
+    classDef startEnd fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef process fill:#e3f2fd,stroke:#0277bd,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef aiProcess fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef notification fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    
+    class A,Z startEnd
+    class C,D,H,I,L,M,N,P,Q,U,V,W,X,Y process
+    class B,G,J,O,T decision
+    class E,F aiProcess
+    class R,S notification
+```
+
+---
+
+## 📌 Project Roadmap
+
+- [X] Đặt bàn, quản lý booking
+- [X] Gợi ý món ăn, menu
+- [X] Quản lý đơn hàng, khách hàng
+- [X] Tích hợp AI Agent tiếng Việt
+- [ ] Giao diện web/mobile
+- [ ] Tích hợp thanh toán online
+- [ ] Báo cáo, thống kê nâng cao
+
+---
+
+## 🔰 Contributing
+
+Đóng góp ý kiến, pull request, hoặc báo lỗi qua GitHub Issues.
+
+---
+
+## 🎗 License
+
+MIT License
+
+---
+
+## 🙌 Acknowledgments
+
+- Gemini LLM, Google
+- Chroma/FAISS VectorDB
+- NetBeans, Flask, Python, Java
+- Icons8 
+
