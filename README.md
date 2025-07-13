@@ -1,120 +1,175 @@
-# Restaurant Booking Management System
+<div align="left" style="position: relative;">
+<img src="https://img.icons8.com/?size=512&id=55494&format=png" align="right" width="30%" style="margin: -20px 0 0 20px;">
+<h1>RESTAURANTBOOKINGMANAGEMENT</h1>
+<p align="left">
+	<em>Hệ thống quản lý đặt bàn, thực đơn, đơn hàng nhà hàng tích hợp AI Agent tiếng Việt</em>
+</p>
+<p align="left">
+	<img src="https://img.shields.io/github/license/blu1606/RestaurantBookingManagement?style=social&logo=opensourceinitiative&logoColor=white&color=0080ff" alt="license">
+	<img src="https://img.shields.io/github/last-commit/blu1606/RestaurantBookingManagement?style=social&logo=git&logoColor=white&color=0080ff" alt="last-commit">
+	<img src="https://img.shields.io/github/languages/top/blu1606/RestaurantBookingManagement?style=social&color=0080ff" alt="repo-top-language">
+	<img src="https://img.shields.io/github/languages/count/blu1606/RestaurantBookingManagement?style=social&color=0080ff" alt="repo-language-count">
+</p>
+<p align="left">Built with the tools and technologies:</p>
+<p align="left">
+	<img src="https://img.shields.io/badge/GNU%20Bash-4EAA25.svg?style=social&logo=GNU-Bash&logoColor=white" alt="GNU%20Bash">
+	<img src="https://img.shields.io/badge/Python-3776AB.svg?style=social&logo=Python&logoColor=white" alt="Python">
+	<img src="https://img.shields.io/badge/java-%23ED8B00.svg?style=social&logo=openjdk&logoColor=white" alt="java">
+</p>
+</div>
+<br clear="right">
 
-## Mô tả dự án
+## 🔗 Table of Contents
+
+- [📍 Overview](#-overview)
+- [👾 Features](#-features)
+- [📁 Project Structure](#-project-structure)
+  - [📂 Project Index](#-project-index)
+- [🚀 Getting Started](#-getting-started)
+  - [☑️ Prerequisites](#-prerequisites)
+  - [⚙️ Installation](#-installation)
+  - [🤖 Usage](#🤖-usage)
+  - [🧪 Testing](#🧪-testing)
+- [📌 Project Roadmap](#-project-roadmap)
+- [🔰 Contributing](#-contributing)
+- [🎗 License](#-license)
+- [🙌 Acknowledgments](#-acknowledgments)
+
+---
+
+## 📍 Overview
 
 **Restaurant Booking Management System** là hệ thống quản lý đặt bàn và dịch vụ nhà hàng thông minh, tích hợp AI Agent sử dụng ngôn ngữ tự nhiên tiếng Việt. Dự án kết hợp backend Java (theo mô hình MVC) và Python AI Agent (RAG + LLM) để tự động hóa các nghiệp vụ như đặt bàn, gợi ý món ăn, quản lý đơn hàng, chăm sóc khách hàng, và hỗ trợ quản lý nhà hàng.
 
 ---
 
-## Kiến trúc hệ thống
+## �� Features
 
-```
-┌───────────────────────┐    HTTP API     ┌─────────────────────────┐
-│     Java Backend      │◀──────────────▶│   Python AI Agent       │
-│       (MVC)           │                 │    (RAG + LLM)          │
-│  • Model              │                 │  • FAISS/Chroma VectorDB│
-│  • View               │                 │  • Gemini LLM           │
-│  • Controller         │                 │  • Flask API            │
-└───────────────────────┘                 └─────────────────────────┘
-```
-
-- **Java Backend**: Xử lý nghiệp vụ, lưu trữ dữ liệu, cung cấp API cho frontend và AI Agent.
-- **Python AI Agent**: Hiểu ngôn ngữ tự nhiên, phân tích ý định, gợi ý, trả lời tự động, tích hợp LLM (Gemini).
+- Đặt bàn, kiểm tra bàn trống, quản lý booking
+- Gợi ý món ăn, hiển thị thực đơn, tư vấn món phù hợp
+- Quản lý đơn hàng, khách hàng, phản hồi
+- Tích hợp AI Agent tiếng Việt (Gemini LLM, RAG)
+- Tìm kiếm thông tin nhanh qua vector search
+- Phân quyền, quản lý vai trò (user, manager)
+- Giao tiếp tự nhiên qua console hoặc API
 
 ---
 
-## Hướng dẫn cài đặt
+## 📁 Project Structure
 
-### 1. Cài đặt Python AI Agent
+```sh
+└── RestaurantBookingManagement/
+    ├── README.md
+    ├── ai_agent
+    │   ├── __init__.py
+    │   ├── agent_permissions.json
+    │   ├── agents
+    │   ├── app.py
+    │   ├── requirements.txt
+    │   ├── tools.json
+    │   └── tools_customer.json
+    ├── build.xml
+    ├── data
+    │   ├── bookings.json
+    │   ├── customers.json
+    │   ├── knowledge
+    │   ├── menu_items.json
+    │   ├── orders.json
+    │   └── tables.json
+    ├── lib
+    │   └── gson-2.10.1.jar
+    ├── manifest.mf
+    ├── nbproject
+    ├── run_ai.bat
+    ├── run_ai.sh
+    ├── run_memory.bat
+    └── src
+        └── restaurantbookingmanagement
+```
 
-```bash
+### 📂 Project Index
+<details open>
+	<summary><b><code>RESTAURANTBOOKINGMANAGEMENT/</code></b></summary>
+	<details>
+		<summary><b>ai_agent</b></summary>
+		<blockquote>
+			- Python AI Agent (RAG + LLM, Flask API)
+			- Xử lý intent, routing, sinh phản hồi tự động
+		</blockquote>
+	</details>
+	<details>
+		<summary><b>src/restaurantbookingmanagement</b></summary>
+		<blockquote>
+			- Java Backend (MVC: Model, View, Controller)
+			- Xử lý nghiệp vụ, lưu trữ dữ liệu, API
+		</blockquote>
+	</details>
+	<details>
+		<summary><b>data</b></summary>
+		<blockquote>
+			- Dữ liệu mẫu: menu, booking, khách hàng, bàn, đơn hàng
+		</blockquote>
+	</details>
+</details>
+
+---
+
+## 🚀 Getting Started
+
+### ☑️ Prerequisites
+
+- **Java 8+**
+- **Python 3.8+**
+- **pip**
+
+### ⚙️ Installation
+
+1. Clone repository:
+```sh
+git clone https://github.com/blu1606/RestaurantBookingManagement
+cd RestaurantBookingManagement
+```
+2. Cài đặt Python dependencies:
+```sh
 cd ai_agent
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# hoặc
-venv\Scripts\activate     # Windows
-
 pip install -r requirements.txt
 ```
-
-- **Cấu hình Gemini API key**:
-  - Đặt biến môi trường `GOOGLE_API_KEY` hoặc thêm vào file `.env` trong thư mục `ai_agent`.
-
-```bash
-export GOOGLE_API_KEY="your-gemini-api-key-here"
+3. Build Java backend (NetBeans hoặc dòng lệnh):
+```sh
+# Mở project bằng NetBeans và build, hoặc:
+cd ..
+ant
 ```
 
-- **Chạy AI Agent**:
-```bash
+### 🤖 Usage
+
+- Chạy AI Agent (Python):
+```sh
+cd ai_agent
 python app.py
 ```
-- Truy cập API tại: `http://localhost:5000`
-
-### 2. Cài đặt & chạy Java Backend
-
-- Mở project trong NetBeans IDE.
-- Build project (F11).
-- Chạy file `RestaurantBookingManagement.java` (F6).
-
----
-
-## Phụ thuộc
-
-### Python (ai_agent/requirements.txt)
-- flask==2.3.3
-- flask-cors==4.0.0
-- google-generativeai==0.3.2
-- sentence-transformers
-- numpy
-- scikit-learn
-- python-dotenv==1.0.0
-- langchain-chroma==0.1.0
-- langchain-core==0.1.0
-- langchain-google-genai==0.0.6
-
-### Java
-- Java 11+
-- Gson library (cho JSON parsing)
-
----
-
-## Cách dùng & ví dụ
-
-### Đặt bàn
-```
-> Tôi muốn đặt bàn 2 người tối nay
-> Đặt bàn 4 người vào 7h tối mai
-> Cần bàn 8 người cho bữa trưa
-```
-**AI sẽ hỏi thêm thông tin khách hàng nếu cần.**
-
-### Gọi món
-```
-> Gợi ý cho tôi các món ăn mùa hè
-> Cho tôi xem menu
-> Tôi muốn gọi phở bò và trà đá
+- Chạy Java backend:
+```sh
+# Chạy từ NetBeans hoặc dòng lệnh:
+cd src
+# hoặc chạy file RestaurantBookingManagement.java
 ```
 
-### Hủy đặt bàn, hỏi thông tin, quản lý đơn hàng
+### 🧪 Testing
+
+- Chạy test cho Python (nếu có):
+```sh
+cd ai_agent
+pytest
 ```
-> Hủy đặt bàn số 5
-> Xem các bàn còn trống
-> Tính tiền cho booking 3
+- Chạy test cho Java (nếu có):
+```sh
+# Sử dụng NetBeans hoặc dòng lệnh
 ```
 
 ---
 
-## Đặc điểm chính & Tính năng
-
-- Hiểu ngôn ngữ tự nhiên tiếng Việt.
-- Đặt bàn, gợi ý món ăn, quản lý đơn hàng, báo cáo doanh thu.
-- Tích hợp AI Gemini LLM, vector search (RAG).
-- Quản lý khách hàng, bàn, menu, đơn hàng, feedback.
-- Phân quyền theo vai trò (user, staff, admin, manager).
-
----
-
-## Giải thích về AI Agent, mô hình & luồng hoạt động
+## 🧠 Giải thích về AI Agent, mô hình & luồng hoạt động
 
 ### 1. **AI Routing (RouterAI)**
 - **RouterAI** là thành phần trung tâm chịu trách nhiệm phân tích ý định (intent) của người dùng và điều hướng (route) yêu cầu đến agent chuyên biệt phù hợp.
@@ -127,53 +182,38 @@ python app.py
   - greeting: Chào hỏi, giới thiệu
   - menu_recommendation: Gợi ý món ăn, hỏi menu
   - booking: Đặt bàn, kiểm tra bàn trống
-  - cancellation_modification: Hủy, sửa đặt bàn
-  - restaurant_info: Hỏi thông tin nhà hàng
+  - cancellation: Hủy bàn
+  - order: Đặt món, kiểm tra đơn hàng
   - feedback: Góp ý, đánh giá
-  - management: Quản lý đơn hàng, báo cáo
-  - fallback: Không xác định, ngoài phạm vi
+  - information: Hỏi thông tin nhà hàng
+  - fallback: Xử lý câu hỏi ngoài phạm vi
 - **Ví dụ routing:**
-  - "Tôi muốn đặt bàn 4 người tối nay" → intent: booking → BookingAgent
-  - "Gợi ý cho tôi các món ăn mùa hè" → intent: menu_recommendation → MenuAgent
-  - "Hủy đặt bàn số 5" → intent: cancellation_modification → CancellationAgent
+  - "Tôi muốn đặt bàn cho 2 người tối nay" → intent: booking → BookingAgent
+  - "Có món phở không?" → intent: menu_recommendation → MenuAgent
 
-### 2. **AI Agent (Python)**
-- **BaseAgent**: Lớp trừu tượng cho mọi agent, quản lý knowledge base, vector DB, tool detection.
-- **Specialized Agents**:
-  - `GreetingAgent`: Chào hỏi, hướng dẫn.
-  - `MenuAgent`: Gợi ý món ăn, show menu.
-  - `BookingAgent`: Đặt bàn, kiểm tra bàn trống.
-  - `OrderAgent`: Gọi món, tính tiền, quản lý đơn hàng.
-  - `InformationAgent`: Thông tin nhà hàng, khách hàng.
-  - `CancellationAgent`: Hủy đặt bàn.
-  - `FallbackAgent`: Xử lý trường hợp không xác định.
+### 2. **Luồng hoạt động tổng thể**
 
-### 3. **Mô hình AI & Tool Detection**
-- **Gemini LLM**: Xử lý ngôn ngữ tự nhiên, sinh phản hồi, phân tích ý định.
-- **ToolDetector**: Singleton, sử dụng embeddings (GoogleGenerativeAIEmbeddings) + cosine similarity để phát hiện tool phù hợp.
-- **RAG (Retrieval-Augmented Generation)**: Kết hợp knowledge base (vector DB) và LLM để trả lời chính xác, có ngữ cảnh.
+1. Người dùng nhập câu hỏi/nhu cầu tự nhiên (console hoặc API).
+2. Java backend nhận request, chuyển tiếp tới Python AI Agent qua HTTP API.
+3. AI Agent (RouterAI) phân tích intent, chọn agent chuyên biệt.
+4. Agent chuyên biệt truy vấn dữ liệu (menu, booking, v.v.), sinh phản hồi tự động.
+5. Kết quả trả về Java backend, hiển thị cho người dùng.
 
-### 4. **Luồng hoạt động**
-1. Người dùng nhập yêu cầu (tiếng Việt tự nhiên).
-2. Flask API nhận request, chuyển cho AgentManager.
-3. **RouterAI** phân tích ý định, chọn agent phù hợp.
-4. Agent xử lý, truy vấn knowledge base, gọi LLM hoặc tool.
-5. Nếu là action Java, trả về cho backend xử lý nghiệp vụ.
-6. Trả kết quả cho người dùng.
+### 3. **Các mô hình & công nghệ AI**
+- **Gemini LLM**: Xử lý ngôn ngữ tự nhiên, phân tích intent, sinh phản hồi.
+- **RAG (Retrieval-Augmented Generation)**: Kết hợp truy vấn dữ liệu thực tế (menu, booking, knowledge) với LLM để trả lời chính xác, sát nghiệp vụ.
+- **Vector Search (FAISS/Chroma)**: Tìm kiếm ngữ nghĩa nhanh trên tập tool/data.
+
+### 4. **Design Pattern sử dụng**
+- **MVC (Java backend):** Phân tách Model, View, Controller rõ ràng.
+- **Agent Pattern (Python):** Mỗi nghiệp vụ là một agent chuyên biệt, quản lý bởi AgentManager.
+- **Singleton (ToolDetector):** Đảm bảo chỉ có một instance quản lý tool embeddings.
+- **Factory/Registry (AIActionHandlerRegistry):** Đăng ký và gọi handler động theo action.
+- **Strategy (Routing):** RouterAI chọn chiến lược agent phù hợp theo intent.
 
 ---
 
-## Design Patterns sử dụng
-
-- **Singleton**: ToolDetector (đảm bảo chỉ có 1 instance, tiết kiệm tài nguyên).
-- **Factory**: Khởi tạo các agent chuyên biệt.
-- **Dependency Injection**: Java Service (OrderService, BookingService, ...).
-- **State Pattern**: Quản lý trạng thái bàn (TableStatus, TableState).
-- **MVC**: Java backend (Model-View-Controller).
-
----
-
-## Sơ đồ kiến trúc tổng thể
+## 🏗️ Sơ đồ kiến trúc hệ thống
 
 ```mermaid
 graph TD
@@ -203,83 +243,58 @@ graph TD
 
 ---
 
-## ERD (Entity Relationship Diagram)
+## 🗂️ ERD (Entity Relationship Diagram)
 
 ```mermaid
 erDiagram
     CUSTOMER ||--o{ BOOKING : has
-    BOOKING }o--|| TABLE : reserves
-    BOOKING ||--o{ ORDER : includes
+    CUSTOMER ||--o{ ORDER : places
+    BOOKING ||--o{ TABLE : reserves
     ORDER ||--o{ MENU_ITEM : contains
-    CUSTOMER {
-        int customerId
-        string name
-        string phone
-        string email
-        string role
-    }
-    BOOKING {
-        int bookingId
-        datetime bookingTime
-        int numberOfGuests
-        string status
-    }
-    TABLE {
-        int tableId
-        int capacity
-        string status
-    }
-    ORDER {
-        int orderId
-        float totalAmount
-        string status
-    }
-    MENU_ITEM {
-        int itemId
-        string name
-        float price
-        string description
-    }
+    TABLE ||--o{ BOOKING : assigned
+    MENU_ITEM ||--o{ ORDER : in
 ```
 
 ---
 
-## User Flow
+## 👤 User Flow
 
-1. **Đặt bàn**:  
-   Người dùng → Nhập yêu cầu → AI hỏi thêm thông tin (nếu thiếu) → Xác nhận đặt bàn → Lưu vào database.
-
-2. **Gọi món**:  
-   Người dùng → Nhập món muốn gọi → AI xác nhận, kiểm tra menu → Thêm vào đơn hàng → Tính tiền.
-
-3. **Hủy đặt bàn/đơn hàng**:  
-   Người dùng → Nhập yêu cầu hủy → AI xác nhận → Backend cập nhật trạng thái.
-
-4. **Xem thông tin, báo cáo**:  
-   Người dùng/Quản lý → Nhập yêu cầu → AI/Backend trả về thông tin, báo cáo.
+1. Người dùng đăng nhập/đăng ký (nếu có)
+2. Xem menu, hỏi món, nhận gợi ý từ AI
+3. Đặt bàn, kiểm tra bàn trống
+4. Đặt món, kiểm tra đơn hàng
+5. Hủy bàn, gửi phản hồi
+6. Nhận thông báo xác nhận, trạng thái qua console/API
 
 ---
 
-## Ví dụ sử dụng
+## 📌 Project Roadmap
 
-### Đặt bàn
-```
-> Tôi muốn đặt bàn 4 người tối nay
-AI: Vui lòng cho biết tên và số điện thoại để xác nhận đặt bàn.
-```
-
-### Gọi món
-```
-> Gợi ý cho tôi các món ăn mùa hè
-AI: Gợi ý: Phở Bò Tái (ID: 101), Bún Chả Hà Nội (ID: 102), ...
-```
-
-### Hủy đặt bàn
-```
-> Hủy đặt bàn số 5
-AI: Đã hủy đặt bàn #5 thành công.
-```
+- [X] Đặt bàn, quản lý booking
+- [X] Gợi ý món ăn, menu
+- [X] Quản lý đơn hàng, khách hàng
+- [X] Tích hợp AI Agent tiếng Việt
+- [ ] Giao diện web/mobile
+- [ ] Tích hợp thanh toán online
+- [ ] Báo cáo, thống kê nâng cao
 
 ---
 
-**Chúc bạn sử dụng hệ thống hiệu quả!** 
+## 🔰 Contributing
+
+Đóng góp ý kiến, pull request, hoặc báo lỗi qua GitHub Issues.
+
+---
+
+## 🎗 License
+
+MIT License
+
+---
+
+## 🙌 Acknowledgments
+
+- Gemini LLM, Google
+- Chroma/FAISS VectorDB
+- NetBeans, Flask, Python, Java
+- Icons8 
