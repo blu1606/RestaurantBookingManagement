@@ -178,27 +178,27 @@ python app.py
 ```mermaid
 graph TD
     subgraph Java Backend (MVC)
-        Model
-        View
-        Controller
+        A[Model]
+        B[View]
+        C[Controller]
     end
     subgraph Python AI Agent (RAG + LLM)
-        BaseAgent
-        SpecializedAgents
-        ToolDetector
-        VectorDB
-        GeminiLLM
-        FlaskAPI
+        D[BaseAgent]
+        E[SpecializedAgents]
+        F[ToolDetector]
+        G[VectorDB]
+        H[GeminiLLM]
+        I[FlaskAPI]
     end
-    Frontend -.->|HTTP API| FlaskAPI
-    FlaskAPI <--> Controller
-    Controller <--> Model
-    Controller <--> View
-    FlaskAPI <--> BaseAgent
-    BaseAgent <--> SpecializedAgents
-    BaseAgent <--> ToolDetector
-    BaseAgent <--> VectorDB
-    BaseAgent <--> GeminiLLM
+    Frontend -.->|HTTP API| I
+    I <--> C
+    C <--> A
+    C <--> B
+    I <--> D
+    D <--> E
+    D <--> F
+    D <--> G
+    D <--> H
 ```
 
 ---
