@@ -52,5 +52,11 @@
     "name": "Bánh Oreo",
     "price": 15000.0,
     "description": "Bánh oreo ngon lắm"
+  },
+  {
+    "itemId": 206,
+    "name": "Cháo bò",
+    "price": 25000.0,
+    "description": "cháo bò ngọt xương"
   }
 ]

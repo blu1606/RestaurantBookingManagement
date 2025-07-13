@@ -18,7 +18,11 @@ public class TableService {
     }
 
     public List<Table> getAllTables() {
-        return new ArrayList<>(tableFileService.readTablesFromFile());
+        List<Table> tables = new ArrayList<>(tableFileService.readTablesFromFile());
+        for (Table table : tables) {
+            table.syncStateWithStatus();
+        }
+        return tables;
     }
 
     public List<Table> getAvailableTables() {

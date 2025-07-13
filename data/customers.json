@@ -5,7 +5,9 @@
     "phone": "0900000001",
     "email": "admin1@restaurant.com",
     "activeBookingIds": [
-      1
+      1,
+      2,
+      3
     ],
     "role": "admin",
     "password": "1111"
@@ -36,7 +38,8 @@
     "activeBookingIds": [
       2,
       3,
-      4
+      4,
+      5
     ],
     "role": "user",
     "password": "1111"

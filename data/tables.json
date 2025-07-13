@@ -3,7 +3,7 @@
     "tableId": 1,
     "orderIds": [],
     "capacity": 2,
-    "status": "RESERVED"
+    "status": "AVAILABLE"
   },
   {
     "tableId": 2,
@@ -15,13 +15,13 @@
     "tableId": 3,
     "orderIds": [],
     "capacity": 4,
-    "status": "AVAILABLE"
+    "status": "RESERVED"
   },
   {
     "tableId": 4,
     "orderIds": [],
     "capacity": 6,
-    "status": "AVAILABLE"
+    "status": "RESERVED"
   },
   {
     "tableId": 5,
@@ -33,6 +33,12 @@
     "tableId": 6,
     "orderIds": [],
     "capacity": 10,
+    "status": "AVAILABLE"
+  },
+  {
+    "tableId": 7,
+    "orderIds": [],
+    "capacity": 12,
     "status": "AVAILABLE"
   }
 ]

@@ -110,17 +110,13 @@ class AgentManager:
             if hasattr(agent, 'user_role') and role != agent.user_role:
                 # Tạo agent mới với role mới
                 try:
-                    if agent_name == "BookingAgent":
-                        agent = BookingAgent(self.gemini_model, user_role=role)
-                    elif agent_name == "OrderAgent":
-                        agent = OrderAgent(self.gemini_model, user_role=role)
-                    elif agent_name == "CancellationAgent":
-                        agent = CancellationAgent(self.gemini_model, user_role=role)
-                    elif agent_name == "MenuAgent":
-                        agent = MenuAgent(self.gemini_model, user_role=role)
-                    # Cập nhật agent trong cache
-                    self.agents[agent_name] = agent
-                    print(f"🔄 Updated {agent_name} with role '{role}'")
+                    agent.user_role = role
+                    # Nếu cần, reload permissions/tools cho role mới
+                    if hasattr(agent, '_load_permissions'):
+                        agent._load_permissions()
+                    if hasattr(agent, '_load_tools'):
+                        agent._load_tools()
+                    print(f"🔄 Updated {agent_name} with role '{role}' (no re-init)")
                 except Exception as e:
                     print(f"⚠️ Failed to update agent role: {e}")
             
@@ -128,7 +124,7 @@ class AgentManager:
             if agent_name == "BookingAgent":
                 response = agent.process_request(user_input, session_id, chat_session=current_chat_session, user_info=user_info)
             else:
-            response = agent.process_request(user_input, session_id, chat_session=current_chat_session)
+                response = agent.process_request(user_input, session_id, chat_session=current_chat_session)
             
             # Nếu response là ask_for_info, lưu pending action
             if response.get("action") == "ask_for_info":

@@ -335,4 +335,23 @@ public class CustomerService {
         }
         return false;
     }
+
+    /**
+     * Tạo khách hàng mới nếu chưa tồn tại (theo tên, email, số điện thoại)
+     * Trả về true nếu tạo thành công, false nếu trùng lặp
+     */
+    public boolean createCustomerIfNotExists(Customer customer) {
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        boolean exists = customers.stream().anyMatch(c ->
+            c.getPhone().equals(customer.getPhone()) ||
+            c.getName().equalsIgnoreCase(customer.getName()) ||
+            (customer.getEmail() != null && !customer.getEmail().isEmpty() && c.getEmail() != null && c.getEmail().equalsIgnoreCase(customer.getEmail()))
+        );
+        if (exists) return false;
+        int nextCustomerId = customers.stream().mapToInt(Customer::getCustomerId).max().orElse(0) + 1;
+        customer.setCustomerId(nextCustomerId);
+        customers.add(customer);
+        customerFileService.writeCustomersToFile(customers);
+        return true;
+    }
 } 

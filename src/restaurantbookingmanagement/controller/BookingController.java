@@ -31,7 +31,7 @@ public class BookingController {
             @Override
             public void execute(int n) {
                 switch (n) {
-                    case 1 -> viewBookingsMenu();
+                    case 1 -> view.displayBookings(bookingService.getAllBookings());
                     case 2 -> deleteBookingMenu();
                     case 3 -> editBookingMenu();
                     case 4 -> searchBookingMenu();
@@ -65,18 +65,10 @@ public class BookingController {
     }
     
     /**
-     * Xem danh sách đặt bàn
-     */
-    private void viewBookingsMenu() {
-        List<Booking> bookings = bookingService.getAllBookings();
-        view.displayBookings(bookings);
-    }
-    
-    /**
      * Xóa đặt bàn
      */
     private void deleteBookingMenu() {
-        Integer id = getIntWithCancel("Nhập ID đặt bàn cần xóa:");
+        Integer id = view.getIntWithCancel("Nhập ID đặt bàn cần xóa:");
         if (id == null) {
             view.displayMessage("Đã hủy thao tác xóa đặt bàn.");
             return;
@@ -90,7 +82,7 @@ public class BookingController {
      * Sửa đặt bàn
      */
     private void editBookingMenu() {
-        Integer id = getIntWithCancel("Nhập ID đặt bàn cần sửa:");
+        Integer id = view.getIntWithCancel("Nhập ID đặt bàn cần sửa:");
         if (id == null) {
             view.displayMessage("Đã hủy thao tác sửa đặt bàn.");
             return;
@@ -114,7 +106,7 @@ public class BookingController {
      * Tìm đặt bàn theo ID
      */
     private void searchBookingById() {
-        Integer id = getIntWithCancel("Nhập ID đặt bàn:");
+        Integer id = view.getIntWithCancel("Nhập ID đặt bàn:");
         if (id == null) {
             view.displayMessage("Đã hủy thao tác tìm kiếm đặt bàn.");
             return;
@@ -203,22 +195,7 @@ public class BookingController {
      * Hiển thị danh sách đặt bàn
      */
     public void displayBookings() {
-        List<Booking> bookings = bookingService.getAllBookings();
-        view.displayBookings(bookings);
-    }
-    
-    /**
-     * Hàm tiện ích cho nhập int có hỗ trợ cancel
-     */
-    private Integer getIntWithCancel(String message) {
-        String input = view.getInputHandler().getStringWithCancel(message);
-        if (input == null) return null;
-        try {
-            return Integer.parseInt(input);
-        } catch (NumberFormatException e) {
-            view.displayError("Giá trị không hợp lệ. Vui lòng nhập số nguyên hoặc 'cancel' để hủy.");
-            return getIntWithCancel(message);
-        }
+        view.displayBookings(bookingService.getAllBookings());
     }
     
     /**

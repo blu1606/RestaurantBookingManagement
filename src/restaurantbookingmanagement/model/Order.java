@@ -9,7 +9,7 @@ import java.util.List;
  */
 public class Order {
     private int orderId;
-    private Booking booking;
+    private transient Booking booking;
     private List<OrderItem> items;
     private LocalDateTime orderTime;
     private String status; // "PENDING", "PREPARING", "READY", "COMPLETED"
@@ -53,6 +53,19 @@ public class Order {
     
     public int getTableId() {
         return tableId;
+    }
+    
+    public int getBookingId() {
+        return booking != null ? booking.getBookingId() : 0;
+    }
+    public Table getTable() {
+        return booking != null ? booking.getTable() : null;
+    }
+    public void setTable(Table table) {
+        if (booking != null) {
+            booking.setTable(table);
+            this.tableId = table != null ? table.getTableId() : 0;
+        }
     }
     
     // Getter cho tên món đầu tiên (dùng cho các thao tác đơn giản)
@@ -143,7 +156,11 @@ public class Order {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Đơn hàng #").append(orderId).append(" - ").append(booking.getCustomer().getName());
+        String customerName = "N/A";
+        if (booking != null && booking.getCustomer() != null) {
+            customerName = booking.getCustomer().getName();
+        }
+        sb.append("Đơn hàng #").append(orderId).append(" - ").append(customerName);
         sb.append("\nThời gian: ").append(orderTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         sb.append("\nTrạng thái: ").append(status);
         sb.append("\nCác món đã đặt:");

@@ -9,6 +9,7 @@ import restaurantbookingmanagement.utils.DebugUtil;
 import restaurantbookingmanagement.service.fileservice.BookingFileService;
 import restaurantbookingmanagement.service.fileservice.CustomerFileService;
 import restaurantbookingmanagement.service.validator.BookingValidator;
+import restaurantbookingmanagement.view.dto.BookingRequest;
 
 // Design Pattern: Dependency Injection, State
 // Purpose: Inject TableService and BookingValidator; manage Booking status using State pattern.
@@ -217,7 +218,28 @@ public class BookingService {
     }
     
     public List<Booking> getAllBookings() {
-        return new ArrayList<>(bookingFileService.readBookingsFromFile());
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        List<Table> tables = tableService.getAllTables();
+        for (Booking booking : bookings) {
+            // Ánh xạ customerId sang object
+            if (booking.getCustomer() == null && booking.getCustomerId() > 0) {
+                Customer customer = customers.stream()
+                    .filter(c -> c.getCustomerId() == booking.getCustomerId())
+                    .findFirst().orElse(null);
+                booking.setCustomer(customer);
+            }
+            // Ánh xạ tableId sang object
+            if (booking.getTable() == null && booking.getTableId() > 0) {
+                Table table = tables.stream()
+                    .filter(t -> t.getTableId() == booking.getTableId())
+                    .findFirst().orElse(null);
+                booking.setTable(table);
+            }
+            // Khởi tạo lại state từ status
+            booking.syncStateWithStatus();
+        }
+        return bookings;
     }
     
     public void completeBooking(int bookingId) {
@@ -281,17 +303,32 @@ public class BookingService {
     public boolean deleteBooking(int bookingId) {
         List<Booking> bookings = bookingFileService.readBookingsFromFile();
         List<Table> tables = tableService.getAllTables();
-        
         Booking booking = findBookingById(bookingId, bookings);
         if (booking != null) {
+            // Ánh xạ lại Table nếu đang null
+            if (booking.getTable() == null && booking.getTableId() > 0) {
+                Table table = tables.stream()
+                    .filter(t -> t.getTableId() == booking.getTableId())
+                    .findFirst().orElse(null);
+                booking.setTable(table);
+            }
+            // Ánh xạ lại Customer nếu đang null
+            if (booking.getCustomer() == null && booking.getCustomerId() > 0) {
+                List<Customer> customers = customerFileService.readCustomersFromFile();
+                Customer customer = customers.stream()
+                    .filter(c -> c.getCustomerId() == booking.getCustomerId())
+                    .findFirst().orElse(null);
+                booking.setCustomer(customer);
+            }
             // Update table status if booking was confirmed
             if (booking.getStatus().equals("CONFIRMED")) {
                 Table table = booking.getTable();
-                table.setStatus(TableStatus.AVAILABLE);
-                updateTableInList(tables, table);
-                tableService.writeTablesToFile(tables);
+                if (table != null) {
+                    table.setStatus(TableStatus.AVAILABLE);
+                    updateTableInList(tables, table);
+                    tableService.writeTablesToFile(tables);
+                }
             }
-            
             // Remove booking
             bookings.remove(booking);
             bookingFileService.writeBookingsToFile(bookings);
@@ -317,5 +354,55 @@ public class BookingService {
         for (int i = 0; i < bookings.size(); i++) if (bookings.get(i).getBookingId() == id) bookings.set(i, booking);
         bookingFileService.writeBookingsToFile(bookings);
         return true;
+    }
+    
+    /**
+     * Tạo booking từ BookingRequest DTO (refactor cho controller mỏng)
+     */
+    public Booking createBooking(BookingRequest req) {
+        List<Table> tables = tableService.getAllTables();
+        List<Booking> bookings = bookingFileService.readBookingsFromFile();
+
+        // Lưu thông tin khách hàng vào customers.json và lấy customer đã được lưu
+        Customer customer = new Customer(0, req.getName(), req.getPhone(), req.getEmail(), "user", "");
+        Customer savedCustomer = saveCustomerToFile(customer);
+
+        // Đọc lại customers từ file để đảm bảo đồng bộ
+        List<Customer> customers = customerFileService.readCustomersFromFile();
+        Customer realCustomer = customers.stream()
+            .filter(c -> c.getPhone().equals(savedCustomer.getPhone()))
+            .findFirst()
+            .orElse(savedCustomer);
+
+        Table availableTable = tableService.findAvailableTable(req.getGuests());
+        if (availableTable == null) {
+            return null; // Không có bàn phù hợp
+        }
+
+        // Kiểm tra xem bàn có bị đặt trùng thời gian không
+        if (isTableBookedAtTime(availableTable, req.getBookingTime(), bookings)) {
+            return null; // Bàn đã được đặt vào thời gian này
+        }
+
+        // Tạo booking mới với customer đã được lưu
+        Booking booking = new Booking(nextBookingId++, realCustomer, availableTable, req.getBookingTime(), req.getGuests());
+
+        // Cập nhật trạng thái bàn
+        availableTable.setStatus(TableStatus.RESERVED);
+
+        // Cập nhật danh sách bàn
+        updateTableInList(tables, availableTable);
+        tableService.writeTablesToFile(tables);
+
+        // Thêm booking mới vào danh sách
+        bookings.add(booking);
+        bookingFileService.writeBookingsToFile(bookings);
+
+        // Cập nhật activeBookingIds cho customer
+        realCustomer.addBookingId(booking.getBookingId());
+        updateCustomerInList(customers, realCustomer);
+        customerFileService.writeCustomersToFile(customers);
+
+        return booking;
     }
 } 

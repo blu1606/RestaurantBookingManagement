@@ -57,6 +57,13 @@ public class AIAgentConnector {
      * Gửi yêu cầu đến AI Agent và nhận về phản hồi với role và Customer
      */
     public AIResponse processUserInput(String userInput, String role, Customer currentCustomer) {
+        return processUserInput(userInput, role, currentCustomer, null, null, null);
+    }
+    
+    /**
+     * Gửi yêu cầu đến AI Agent với pending action (originalTool, collectedParams, missingParams)
+     */
+    public AIResponse processUserInput(String userInput, String role, Customer currentCustomer, String originalTool, Map<String, Object> collectedParams, java.util.List<String> missingParams) {
         try {
             Map<String, Object> requestData = new HashMap<>();
             requestData.put("userInput", userInput);
@@ -67,6 +74,9 @@ public class AIAgentConnector {
                 requestData.put("customerPhone", currentCustomer.getPhone());
                 requestData.put("customerEmail", currentCustomer.getEmail());
             }
+            if (originalTool != null) requestData.put("originalTool", originalTool);
+            if (collectedParams != null) requestData.put("collectedParams", collectedParams);
+            if (missingParams != null) requestData.put("missingParams", missingParams);
             String jsonRequest = gson.toJson(requestData);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(AI_API_URL))

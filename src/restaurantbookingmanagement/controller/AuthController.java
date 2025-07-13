@@ -35,7 +35,6 @@ public class AuthController {
                 switch (n) {
                     case 1 -> {
                         if (handleLogin()) {
-                            // Thoát khỏi menu bằng cách throw exception
                             throw new RuntimeException("LOGIN_SUCCESS");
                         }
                     }
@@ -56,10 +55,9 @@ public class AuthController {
             entryMenu.run();
         } catch (RuntimeException e) {
             if ("LOGIN_SUCCESS".equals(e.getMessage())) {
-                // Đăng nhập thành công, tiếp tục
                 return;
             }
-            throw e; // Re-throw nếu là exception khác
+            throw e;
         }
     }
     
@@ -67,29 +65,23 @@ public class AuthController {
      * Xử lý đăng nhập
      */
     private boolean handleLogin() {
-        view.displayMessage("--- Đăng nhập ---");
-        String name = view.getInputHandler().getStringWithCancel("Nhập tên:");
+        String name = view.getLoginName();
         if (name == null) return false;
-        String password = view.getInputHandler().getStringWithCancel("Nhập mật khẩu:");
+        String password = view.getLoginPassword();
         if (password == null) return false;
         
         Customer customer = customerService.findCustomerByName(name);
-        System.out.println("DEBUG: Tìm customer với tên: " + name);
-        System.out.println("DEBUG: Customer tìm được: " + (customer != null ? customer.getName() : "null"));
-        
         if (customer == null) {
-            view.displayError("Không tìm thấy tài khoản với tên: " + name);
+            view.displayLoginError("Không tìm thấy tài khoản với tên: " + name);
             return false;
         }
-        
         if (!password.equals(customer.getPassword())) {
-            view.displayError("Sai mật khẩu.");
+            view.displayLoginError("Sai mật khẩu.");
             return false;
         }
-        
         currentCustomer = customer;
         currentRole = customer.getRole().equalsIgnoreCase("admin") ? Role.MANAGER : Role.USER;
-        view.displaySuccess("Đăng nhập thành công với vai trò: " + currentRole);
+        view.displayLoginSuccess(currentRole);
         return true;
     }
     
@@ -97,35 +89,18 @@ public class AuthController {
      * Xử lý đăng ký
      */
     private boolean handleRegister() {
-        view.displayMessage("--- Đăng ký tài khoản mới ---");
-        String name = view.getInputHandler().getStringWithCancel("Nhập tên:");
-        if (name == null) return false;
-        String phone = view.getInputHandler().getStringWithCancel("Nhập số điện thoại:");
-        if (phone == null) return false;
-        String email = view.getInputHandler().getStringWithCancel("Nhập email:");
-        if (email == null) return false;
-        String password = view.getInputHandler().getStringWithCancel("Tạo mật khẩu:");
-        if (password == null) return false;
-        
-        // Kiểm tra trùng số điện thoại
-        if (customerService.findCustomerByPhone(phone) != null) {
-            view.displayError("Số điện thoại đã tồn tại. Vui lòng đăng nhập hoặc dùng số khác.");
+        Customer newCustomer = view.getRegisterInfo(currentCustomerId + 1);
+        if (newCustomer == null) return false;
+        // Kiểm tra trùng lặp đã chuyển về service
+        boolean created = customerService.createCustomerIfNotExists(newCustomer);
+        if (!created) {
+            view.displayRegisterError("Thông tin đăng ký đã tồn tại. Vui lòng kiểm tra lại.");
             return false;
         }
-        if (customerService.findCustomerByName(name) != null) {
-            view.displayError("Tên đã tồn tại. Vui lòng đăng nhập hoặc dùng tên khác.");
-            return false;
-        }
-        if (customerService.findCustomerByEmail(email) != null) {
-            view.displayError("Email đã tồn tại. Vui lòng đăng nhập hoặc dùng email khác.");
-            return false;
-        }
-        
-        Customer newCustomer = new Customer(++currentCustomerId, name, phone, email, "user", password);
-        customerService.createCustomer(newCustomer);
-        view.displaySuccess("Đăng ký thành công. Đăng nhập tự động...");
+        view.displayRegisterSuccess();
         currentCustomer = newCustomer;
         currentRole = Role.USER;
+        currentCustomerId++;
         return true;
     }
     
@@ -133,7 +108,7 @@ public class AuthController {
      * Xử lý guest mode
      */
     private void handleGuest() {
-        view.displayMessage("--- Tiếp tục với tư cách khách (guest) ---");
+        view.displayGuestMode();
         currentCustomer = null;
         currentRole = Role.USER;
     }

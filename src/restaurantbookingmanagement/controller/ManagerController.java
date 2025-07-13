@@ -5,7 +5,7 @@ import restaurantbookingmanagement.utils.DebugUtil;
 import restaurantbookingmanagement.ai.AIResponse;
 
 /**
- * Controller xử lý các chức năng cho manager
+ * Controller xử lý các chức năng cho manager (chỉ điều phối, không chứa logic nhập/xuất hoặc nghiệp vụ chi tiết)
  */
 public class ManagerController {
     private final MenuController menuController;
@@ -33,7 +33,8 @@ public class ManagerController {
     /**
      * Hiển thị menu cho manager
      */
-    public void showManagerMenu() {
+    public boolean showManagerMenuWithLogout() {
+        final boolean[] logout = {false};
         Menu managerMenu = new Menu("===== MANAGER MENU =====", new String[]{
             "Quản lý món ăn",
             "Quản lý bàn",
@@ -42,70 +43,38 @@ public class ManagerController {
             "Quản lý đơn hàng",
             "Xem Menu User",
             "Chat với AI",
-            "Bật/Tắt Debug Mode"
+            "Bật/Tắt Debug Mode",
+            "Đăng xuất"
         }) {
             @Override
             public void execute(int n) {
                 switch (n) {
-                    case 1 -> handleMenuManagement();
-                    case 2 -> handleTableManagement();
-                    case 3 -> handleCustomerManagement();
-                    case 4 -> handleBookingManagement();
-                    case 5 -> handleOrderManagement();
-                    case 6 -> viewMenuUser();
+                    case 1 -> menuController.handleMenuManagement();
+                    case 2 -> tableController.handleTableManagement();
+                    case 3 -> customerController.handleCustomerManagement();
+                    case 4 -> bookingController.handleBookingManagement();
+                    case 5 -> orderController.handleOrderManagement();
+                    case 6 -> userController.showUserMenuWithLogout();
                     case 7 -> chatWithAI();
                     case 8 -> toggleDebugMode();
+                    case 9 -> { logout[0] = true; throw new RuntimeException("LOGOUT"); }
                     default-> view.displayError("Lựa chọn không hợp lệ.");
                 }
             }
         };
+        try {
         managerMenu.run();
+        } catch (RuntimeException e) {
+            if ("LOGOUT".equals(e.getMessage())) {
+                return true;
+    }
+            throw e;
+        }
+        return logout[0];
     }
     
     /**
-     * Xử lý quản lý món ăn
-     */
-    private void handleMenuManagement() {
-        menuController.handleMenuManagement();
-    }
-    
-    /**
-     * Xử lý quản lý bàn
-     */
-    private void handleTableManagement() {
-        tableController.handleTableManagement();
-    }
-    
-    /**
-     * Xử lý quản lý khách hàng
-     */
-    private void handleCustomerManagement() {
-        customerController.handleCustomerManagement();
-    }
-    
-    /**
-     * Xử lý quản lý đặt bàn
-     */
-    private void handleBookingManagement() {
-        bookingController.handleBookingManagement();
-    }
-    
-    /**
-     * Xử lý quản lý đơn hàng
-     */
-    private void handleOrderManagement() {
-        orderController.handleOrderManagement();
-    }
-    
-    /**
-     * Xem menu user
-     */
-    private void viewMenuUser() {
-        userController.showUserMenu();
-    }
-    
-    /**
-     * Chat với AI
+     * Chat với AI (chỉ điều phối, nhập xuất đã gom về view)
      */
     private void chatWithAI() {
         view.displayMessage("\n--- Chế độ Chat với AI (gõ 'back' để quay lại menu, 'debug' để bật/tắt debug) ---");
@@ -124,10 +93,9 @@ public class ManagerController {
             if (userInput.isEmpty()) continue;
 
             // Gửi tới AI agent
-            AIResponse response = aiController.chatWithAI(userInput, "MANAGER", sessionId);
+            AIResponse response = aiController.chatWithAI(userInput, "MANAGER", null);
             if (response != null) {
                             // Xử lý response thông qua AiService với đầy đủ services
-            // Truy cập services thông qua getter methods
             aiService.processAIResponse(response, orderController.getOrderService(), 
                                      bookingController.getBookingService(), 
                                      customerController.getCustomerService(), view);
@@ -138,7 +106,7 @@ public class ManagerController {
     }
     
     /**
-     * Bật/tắt debug mode
+     * Bật/tắt debug mode (chỉ điều phối)
      */
     private void toggleDebugMode() {
         DebugUtil.toggleDebug();

@@ -56,7 +56,12 @@ class MenuAgent(BaseAgent):
         
         # Luôn đảm bảo có thông tin menu thực tế
         try:
-            with open("data/menu_items.json", "r", encoding="utf-8") as f:
+            import os
+            # Lấy thư mục gốc project (4 cấp lên từ file này)
+            base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+            menu_path = os.path.join(base_dir, "data", "menu_items.json")
+            print(f"[DEBUG] MenuAgent sẽ đọc file menu từ: {menu_path}")
+            with open(menu_path, "r", encoding="utf-8") as f:
                 menu_data = json.load(f)
             
             # Format menu data một cách rõ ràng với itemId
@@ -72,7 +77,8 @@ class MenuAgent(BaseAgent):
                 context = menu_context
                 
         except Exception as e:
-            context = "Không thể tải thông tin menu."
+            import traceback
+            context = f"Không thể tải thông tin menu. Lỗi: {e}\n{traceback.format_exc()}"
         
         prompt = f"""
         {self.get_system_prompt()}

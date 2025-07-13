@@ -12,7 +12,9 @@ public class Booking {
     private LocalDateTime bookingTime;
     private int numberOfGuests;
     private String status; // "CONFIRMED", "CANCELLED", "COMPLETED"
-    private BookingState state;
+    private transient BookingState state;
+    private int customerId;
+    private int tableId;
     
     // No-args constructor for Gson deserialization
     public Booking() {
@@ -57,6 +59,21 @@ public class Booking {
     
     public BookingState getState() { return state; }
     
+    public int getCustomerId() {
+        if (customer != null) return customer.getCustomerId();
+        return customerId;
+    }
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+    }
+    public int getTableId() {
+        if (table != null) return table.getTableId();
+        return tableId;
+    }
+    public void setTableId(int tableId) {
+        this.tableId = tableId;
+    }
+    
     // Setters
     public void setBookingId(int bookingId) {
         this.bookingId = bookingId;
@@ -98,9 +115,12 @@ public class Booking {
     
     @Override
     public String toString() {
-        return "Đặt bàn #" + bookingId + " - " + customer.getName() + 
-               " - Bàn " + table.getTableId() + " - " + numberOfGuests + " người - " + 
-               bookingTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        String customerName = (customer != null) ? customer.getName() : "N/A";
+        String tableInfo = (table != null) ? String.valueOf(table.getTableId()) : "N/A";
+        String bookingTimeStr = (bookingTime != null) ? bookingTime.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) : "N/A";
+        return "Đặt bàn #" + bookingId + " - " + customerName +
+               " - Bàn " + tableInfo + " - " + numberOfGuests + " người - " + 
+               bookingTimeStr;
     }
 
     // State Pattern for Booking

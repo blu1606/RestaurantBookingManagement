@@ -36,7 +36,14 @@ class BookingAgent(BaseAgent):
         """
     
     def process_request(self, user_input: str, session_id: str = "default", chat_session=None, user_info=None) -> Dict[str, Any]:
-        tool = self.detect_tool_from_prompt(user_input)
+        # Ưu tiên dùng Gemini để suggest tool
+        tool_name = None
+        if self.tool_detector:
+            tool_name = self.tool_detector.suggest_tool_with_gemini(user_input)
+        tool = None
+        if tool_name:
+            tool = self.tool_detector.get_tool_by_name(tool_name)
+        # Nếu không có tool, KHÔNG fallback detect_tool_from_prompt, chuyển sang trả lời tự nhiên
         if tool:
             extracted_params = self._extract_booking_parameters(user_input, tool)
             # Nếu có user_info, bổ sung vào params nếu thiếu
@@ -55,6 +62,7 @@ class BookingAgent(BaseAgent):
                     parameters=extracted_params,
                     natural_response=f"Tôi sẽ thực hiện tác vụ: {tool['description']} với thông tin đã cung cấp."
                 )
+        # Nếu không có tool, trả lời tự nhiên dựa vào context/knowledge base
         context = self._get_relevant_context(user_input)
         prompt = f"""
         {self.get_system_prompt()}

@@ -46,7 +46,8 @@ class ToolDetector:
         elif tools and cls._instance.tools != tools:
             # Nếu tools thay đổi, refresh embeddings
             cls._instance.tools = tools
-            cls._instance.tool_embeddings = cls._instance._precompute_tool_embeddings()
+            ToolDetector._initialized = False  # Cho phép re-init embeddings
+            cls._instance.__init__(tools)
         return cls._instance
     
     def _get_embedding(self, text: str) -> List[float]:
@@ -194,4 +195,65 @@ class ToolDetector:
         """
         Lấy danh sách tools theo service
         """
-        return [tool for tool in self.tools if tool.get("service") == service_name] 
+        return [tool for tool in self.tools if tool.get("service") == service_name]
+    
+    def suggest_tool_with_gemini(self, user_input: str, tools: Optional[List[Dict[str, Any]]] = None, model_name: str = "gemini-1.5-flash") -> Optional[str]:
+        """
+        Sử dụng Gemini LLM để suggest tool phù hợp nhất cho user_input.
+        Trả về tên tool (str) hoặc None nếu không xác định được.
+        """
+        import google.generativeai as genai
+        import os
+        try:
+            genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+            model = genai.GenerativeModel(model_name)
+        except Exception as e:
+            print(f"🔥 ToolDetector: Error configuring Gemini: {e}")
+            return None
+
+        tools = tools or self.tools
+        if not tools or not user_input.strip():
+            return None
+
+        # Xây dựng prompt
+        prompt_parts = [
+            "Bạn là AI chuyên chọn tool phù hợp nhất để xử lý yêu cầu của người dùng.",
+            "Dưới đây là danh sách các tool, mô tả và ví dụ:",
+            "---"
+        ]
+        for tool in tools:
+            prompt_parts.append(f"Tool: {tool.get('name','')}")
+            prompt_parts.append(f"Mô tả: {tool.get('description','')}")
+            example = tool.get('example_user_prompt') or tool.get('example', '')
+            if example:
+                prompt_parts.append(f"Ví dụ: {example}")
+            prompt_parts.append("---")
+        prompt_parts.extend([
+            "Nhiệm vụ của bạn là chọn tool phù hợp nhất cho yêu cầu sau.",
+            "QUY TẮC:",
+            "1. Chỉ trả về tên tool (ví dụ: create_booking, show_menu, ...)",
+            "2. Không thêm ký tự, dấu câu, hoặc văn bản khác.",
+            "3. Nếu không có tool nào phù hợp, trả về NONE.",
+            "",
+            f"User Query: {user_input}",
+            "",
+            "Tool:"
+        ])
+        prompt = "\n".join(prompt_parts)
+
+        try:
+            response = model.generate_content(prompt)
+            tool_name = response.text.strip()
+            # Chuẩn hóa output
+            tool_name = tool_name.replace('"', '').replace("'", '').replace(".", '').strip()
+            if tool_name.upper() == "NONE":
+                return None
+            # Kiểm tra tool có trong danh sách không
+            for tool in tools:
+                if tool_name == tool.get('name'):
+                    return tool_name
+            print(f"⚠️ ToolDetector: Gemini trả về tool không hợp lệ: {tool_name}")
+            return None
+        except Exception as e:
+            print(f"🔥 ToolDetector: Error calling Gemini for tool suggestion: {e}")
+            return None 

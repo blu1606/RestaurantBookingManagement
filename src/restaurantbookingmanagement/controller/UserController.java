@@ -3,11 +3,12 @@ package restaurantbookingmanagement.controller;
 import restaurantbookingmanagement.model.*;
 import restaurantbookingmanagement.service.*;
 import restaurantbookingmanagement.view.*;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.ArrayList;
 import restaurantbookingmanagement.ai.AIResponse;
+import restaurantbookingmanagement.view.dto.BookingRequest;
+import restaurantbookingmanagement.view.dto.OrderRequest;
 
 /**
  * Controller xử lý các chức năng cho user
@@ -18,6 +19,7 @@ public class UserController {
     private final ConsoleView view;
     private final AuthController authController;
     private final AiController aiController = new AiController();
+    private final AiService aiService = new AiService();
         
     // Thêm trường MenuService, TableService
     private MenuService menuService;
@@ -36,10 +38,12 @@ public class UserController {
     /**
      * Hiển thị menu cho user
      */
-    public void showUserMenu() {
+    public boolean showUserMenuWithLogout() {
+        final boolean[] logout = {false};
         Menu userMenu = new Menu("===== USER MENU =====", new String[]{
             "Xem menu",
-            "Xem đơn hàng",
+            "Xem bookings",
+            "Xem orders",
             "Xem bàn",
             "Đặt bàn",
             "Đặt món",
@@ -47,24 +51,66 @@ public class UserController {
             "Hủy đặt bàn",
             "Hủy món",
             "Chat với AI",
+            "Đăng xuất"
         }) {
             @Override
             public void execute(int n) {
                 switch (n) {
-                    case 1 -> view.displayMenu(menuService.getAllMenuItems());
-                    case 2 -> view.displayListOrder(orderService.getAllOrders());
-                    case 3 -> view.displayTables(tableService.getAllTables());
-                    case 4 -> handleUserBooking();
-                    case 5 -> handleUserOrder();
-                    case 6 -> handleUserCalculateBill();
-                    case 7 -> handleUserCancelBooking();
-                    case 8 -> handleRemoveItemFromOrder();
-                    case 9 -> chatWithAI();
+                    case 1 -> {
+                        if (menuService == null) {
+                            view.displayError("Lỗi hệ thống: MenuService chưa được khởi tạo.");
+                            return;
+                        }
+                        view.displayMenu(menuService.getAllMenuItems());
+                    }
+                    case 2 -> {
+                        Customer currentCustomer = authController.getCurrentCustomer();
+                        if (currentCustomer == null) {
+                            view.displayError("Bạn chưa đăng nhập.");
+                            return;
+                        }
+                        List<Booking> userBookings = bookingService.getBookingsByCustomer(currentCustomer);
+                        List<Order> allOrders = orderService.getAllOrders();
+                        view.displayBookingsWithTotal(userBookings, allOrders);
+                    }
+                    case 3 -> {
+                        Customer currentCustomer = authController.getCurrentCustomer();
+                        List<Order> orders = orderService.getOrdersByCustomer(currentCustomer);
+                        if (orders.isEmpty()) {
+                            view.displayMessage("Không có đơn hàng nào.");
+                        } else {
+                            for (Order order : orders) {
+                                view.displayOrderTable(order);
+                            }
+                        }
+                    }
+                    case 4 -> {
+                        if (tableService == null) {
+                            view.displayError("Lỗi hệ thống: TableService chưa được khởi tạo.");
+                            return;
+                        }
+                        view.displayTables(tableService.getAllTables());
+                    }
+                    case 5 -> handleUserBooking();
+                    case 6 -> handleUserOrder();
+                    case 7 -> handleUserCalculateBill();
+                    case 8 -> handleUserCancelBooking();
+                    case 9 -> handleRemoveItemFromOrder();
+                    case 10 -> chatWithAI();
+                    case 11 -> { logout[0] = true; throw new RuntimeException("LOGOUT"); }
                     default-> view.displayError("Lựa chọn không hợp lệ.");
                 }
             }
         };
-        userMenu.run();
+        try {
+            userMenu.run();
+        } catch (RuntimeException e) {
+            if ("LOGOUT".equals(e.getMessage())) {
+                return true;
+            }
+            throw e;
+        }
+        return logout[0];
     }
     
     /**
@@ -72,63 +118,21 @@ public class UserController {
      */
     private void handleUserBooking() {
         view.displayMessage("--- Đặt Bàn ---");
-        view.displayTables(tableService.getAllTables());
-        Customer bookingCustomer = authController.getCurrentCustomer();
-        String name, phone, email;
-        if (bookingCustomer != null) {
-            name = bookingCustomer.getName();
-            phone = bookingCustomer.getPhone();
-            email = bookingCustomer.getEmail();
-            if (email == null || email.isEmpty()) {
-                email = view.getInputHandler().getStringWithCancel("Nhập email (bắt buộc):");
-                if (email == null) {
-                    view.displayMessage("Đã hủy thao tác đặt bàn.");
-                    return;
-                }
-                bookingCustomer.setEmail(email);
-            }
-        } else {
-            name = view.getInputHandler().getStringWithCancel("Nhập tên của bạn:");
-            if (name == null) {
-                view.displayMessage("Đã hủy thao tác đặt bàn.");
-                return;
-            }
-            phone = view.getInputHandler().getStringWithCancel("Nhập số điện thoại:");
-            if (phone == null) {
-                view.displayMessage("Đã hủy thao tác đặt bàn.");
-                return;
-            }
-            email = view.getInputHandler().getStringWithCancel("Nhập email:");
-            if (email == null) {
-                view.displayMessage("Đã hủy thao tác đặt bàn.");
-                return;
-            }
-            bookingCustomer = new Customer(0, name, phone, email, "guest", "");
+        if (tableService == null) {
+            view.displayError("Lỗi hệ thống: TableService chưa được khởi tạo.");
+            return;
         }
-        Integer guests = getIntWithCancel("Số lượng khách:");
-        if (guests == null) {
+        view.displayTables(tableService.getAllTables());
+        BookingRequest req = view.getBookingRequest(authController.getCurrentCustomer());
+        if (req == null) {
             view.displayMessage("Đã hủy thao tác đặt bàn.");
             return;
         }
-        LocalDateTime bookingTime = null;
-        while (bookingTime == null) {
-            String dateStr = view.getInputHandler().getStringWithCancel("Nhập ngày giờ đặt bàn (dd/MM/yyyy HH:mm):");
-            if (dateStr == null) {
-                view.displayMessage("Đã hủy thao tác đặt bàn.");
-                return;
-            }
-            try {
-                bookingTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-            } catch (Exception e) {
-                view.displayError("Định dạng ngày giờ không hợp lệ. Vui lòng thử lại.");
-            }
-        }
-        Table table = tableService.findAvailableTable(guests);
-        if (table == null) {
-            view.displayError("Không có bàn phù hợp cho thời gian và số lượng khách này.");
+        Booking booking = bookingService.createBooking(req);
+        if (booking == null) {
+            view.displayError("Không có bàn phù hợp hoặc thời gian bị trùng.");
             return;
         }
-        Booking booking = bookingService.createBooking(bookingCustomer, guests, bookingTime);
         view.displayBookingConfirmation(booking);
     }
     
@@ -137,74 +141,24 @@ public class UserController {
      */
     private void handleUserOrder() {
         view.displayMessage("--- Đặt Món ---");
-        // 1. Kiểm tra user đã có booking chưa
-        List<Booking> userBookings = null;
         Customer currentCustomer = authController.getCurrentCustomer();
-        if (currentCustomer != null) {
-            userBookings = bookingService.getBookingsByCustomer(currentCustomer).stream()
-                .filter(b -> "CONFIRMED".equals(b.getStatus()))
-                .toList();
-        }
-        Booking currentBooking = null;
-        if (userBookings != null && userBookings.size() > 1) {
-            view.displayMessage("Bạn có nhiều bàn đang đặt. Vui lòng chọn bàn để gọi món:");
-            for (int i = 0; i < userBookings.size(); i++) {
-                Booking b = userBookings.get(i);
-                view.displayMessage((i+1) + ". Bàn #" + b.getTable().getTableId() + " | Thời gian: " + b.getBookingTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-            }
-            Integer choice = getIntWithCancel("Chọn số thứ tự bàn muốn đặt món:");
-            if (choice == null || choice < 1 || choice > userBookings.size()) {
-                view.displayMessage("Đã hủy thao tác đặt món.");
-                return;
-            }
-            currentBooking = userBookings.get(choice-1);
-        } else if (userBookings != null && userBookings.size() == 1) {
-            currentBooking = userBookings.get(0);
-        } else {
-            currentBooking = findCurrentBooking();
-        }
-        if (currentBooking == null) {
-            view.displayError("❌ Bạn chưa đặt bàn. Vui lòng đặt bàn trước khi gọi món.");
-            return;
-        }
-        // 2. Lấy order hiện tại cho booking
-        Order order = orderService.getOrCreateOrderForBooking(currentBooking);
-        // 3. Hiển thị menu và hỏi tên hoặc ID món
-        view.displayMenu(menuService.getAllMenuItems());
-        String input = view.getInputHandler().getStringWithCancel("Nhập tên hoặc ID món:");
-        if (input == null) {
+        List<Booking> userBookings = (currentCustomer != null)
+            ? bookingService.getBookingsByCustomer(currentCustomer).stream().filter(b -> "CONFIRMED".equals(b.getStatus())).toList()
+            : null;
+        OrderRequest req = view.getOrderRequest(userBookings, menuService.getAllMenuItems());
+        if (req == null) {
             view.displayMessage("Đã hủy thao tác đặt món.");
             return;
         }
-        MenuItem item = null;
-        try {
-            int id = Integer.parseInt(input);
-            item = menuService.findMenuItemById(id);
-        } catch (NumberFormatException e) {
-            item = menuService.findMenuItemByName(input);
-        }
-        if (item == null) {
-            view.displayError("Không tìm thấy món ăn với tên hoặc ID này.");
-            return;
-        }
-        // 4. Hỏi số lượng
-        Integer quantity = getIntWithCancel("Nhập số lượng:");
-        if (quantity == null) {
-            view.displayMessage("Đã hủy thao tác đặt món.");
-            return;
-        }
-        // 5. Thêm món vào order
-        boolean added = orderService.addItemToOrder(order.getOrderId(), item.getItemId(), quantity);
+        boolean added = orderService.addOrderItem(req, menuService);
         if (added) {
             view.displayMessage("Đã thêm món vào đơn hàng.");
+            Order updatedOrder = orderService.getOrCreateOrderForBooking(req.getBooking());
+            if (updatedOrder != null) {
+                view.displayOrder(updatedOrder);
+            }
         } else {
             view.displayError("Lỗi khi thêm món vào đơn hàng.");
-            return;
-        }
-        // 6. Hiển thị lại order
-        Order updatedOrder = orderService.findOrderById(order.getOrderId());
-        if (updatedOrder != null) {
-            view.displayOrder(updatedOrder);
         }
     }
     
@@ -213,68 +167,13 @@ public class UserController {
      */
     private void handleUserCalculateBill() {
         view.displayMessage("--- Tính Tiền ---");
-        
-        // Lấy tất cả booking của user hiện tại
         Customer currentCustomer = authController.getCurrentCustomer();
-        final List<Booking> userBookings;
-        
-        if (currentCustomer != null) {
-            userBookings = bookingService.getBookingsByCustomer(currentCustomer).stream()
-                .filter(b -> "CONFIRMED".equals(b.getStatus()))
-                .toList();
-        } else {
-            userBookings = new ArrayList<>();
-        }
-        
-        if (userBookings == null || userBookings.isEmpty()) {
-            view.displayError("❌ Bạn chưa đặt bàn. Vui lòng đặt bàn trước khi tính tiền.");
-            return;
-        }
-        
-        // Nếu chỉ có 1 booking, xử lý trực tiếp
-        if (userBookings.size() == 1) {
-            handleSingleBillPayment(userBookings.get(0));
-            return;
-        }
-        
-        // Nếu có nhiều booking, hiển thị menu chọn bàn
-        view.displayMessage("Bạn có " + userBookings.size() + " bàn đang hoạt động. Vui lòng chọn bàn để tính tiền:");
-        
-        String[] bookingOptions = new String[userBookings.size()];
-        for (int i = 0; i < userBookings.size(); i++) {
-            Booking b = userBookings.get(i);
-            Order order = orderService.getOrCreateOrderForBooking(b);
-            String status = "COMPLETED".equals(order.getStatus()) ? " (Đã thanh toán)" : " (Chưa thanh toán)";
-            bookingOptions[i] = "Bàn #" + b.getTable().getTableId() + 
-                               " | " + b.getNumberOfGuests() + " người" +
-                               " | " + b.getBookingTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) +
-                               status;
-        }
-        
-        Menu bookingSelectionMenu = new Menu("--- CHỌN BÀN TÍNH TIỀN ---", bookingOptions) {
-            @Override
-            public void execute(int n) {
-                if (n >= 1 && n <= userBookings.size()) {
-                    Booking selectedBooking = userBookings.get(n - 1);
-                    handleSingleBillPayment(selectedBooking);
-                    // Thoát khỏi menu chọn bàn sau khi xử lý thanh toán
-                    throw new RuntimeException("BILL_PROCESSED");
-                } else {
-                    view.displayError("Lựa chọn không hợp lệ.");
-                }
-            }
-        };
-        
-        try {
-            bookingSelectionMenu.run();
-        } catch (RuntimeException e) {
-            if ("BILL_PROCESSED".equals(e.getMessage())) {
-                // Thoát khỏi menu chọn bàn một cách bình thường
-                return;
-            }
-            // Nếu là exception khác, ném lại
-            throw e;
-        }
+        List<Booking> userBookings = (currentCustomer != null)
+            ? bookingService.getBookingsByCustomer(currentCustomer).stream().filter(b -> "CONFIRMED".equals(b.getStatus())).toList()
+            : new ArrayList<>();
+        Booking booking = view.getBookingForPayment(userBookings);
+        if (booking == null) return;
+        handleSingleBillPayment(booking);
     }
     
     /**
@@ -357,7 +256,11 @@ public class UserController {
      */
     private void handleUserCancelBooking() {
         view.displayMessage("--- Hủy Đặt Bàn ---");
-        Integer bookingId = getIntWithCancel("Nhập ID đặt bàn:");
+        Customer currentCustomer = authController.getCurrentCustomer();
+        List<Booking> userBookings = (currentCustomer != null)
+            ? bookingService.getBookingsByCustomer(currentCustomer).stream().filter(b -> "CONFIRMED".equals(b.getStatus())).toList()
+            : new ArrayList<>();
+        Integer bookingId = view.getBookingIdForCancel(userBookings);
         if (bookingId == null) {
             view.displayMessage("Đã hủy thao tác hủy đặt bàn.");
             return;
@@ -371,30 +274,14 @@ public class UserController {
      * Xử lý hủy món cho user
      */
     private void handleRemoveItemFromOrder() {
-        // 1. Kiểm tra user đã có booking chưa
-        List<Booking> userBookings = null;
         Customer currentCustomer = authController.getCurrentCustomer();
-        if (currentCustomer != null) {
-            userBookings = bookingService.getBookingsByCustomer(currentCustomer).stream()
-                .filter(b -> "CONFIRMED".equals(b.getStatus()))
-                .toList();
-        }
-        Booking booking = null;
+        List<Booking> userBookings = (currentCustomer != null)
+            ? bookingService.getBookingsByCustomer(currentCustomer).stream().filter(b -> "CONFIRMED".equals(b.getStatus())).toList()
+            : null;
+        Booking booking = (userBookings != null && !userBookings.isEmpty()) ? userBookings.get(0) : null;
         if (userBookings != null && userBookings.size() > 1) {
-            view.displayMessage("Bạn có nhiều bàn đang đặt. Vui lòng chọn bàn để hủy món:");
-            for (int i = 0; i < userBookings.size(); i++) {
-                Booking b = userBookings.get(i);
-                view.displayMessage((i+1) + ". Bàn #" + b.getTable().getTableId() + " | Thời gian: " + b.getBookingTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-            }
-            Integer choice = getIntWithCancel("Chọn số thứ tự bàn muốn hủy món:");
-            if (choice == null || choice < 1 || choice > userBookings.size()) {
-                view.displayMessage("Đã hủy thao tác hủy món.");
-                return;
-            }
-            booking = userBookings.get(choice-1);
-        } else if (userBookings != null && userBookings.size() == 1) {
-            booking = userBookings.get(0);
-        } else {
+            booking = view.getBookingForPayment(userBookings); // reuse chọn booking
+        } else if (booking == null) {
             booking = findCurrentBooking();
         }
         if (booking == null) {
@@ -402,47 +289,9 @@ public class UserController {
             return;
         }
         Order order = orderService.getOrCreateOrderForBooking(booking);
-        if (order.getItems().isEmpty()) {
-            view.displayMessage("Đơn hàng chưa có món nào để hủy.");
-            return;
-        }
-        // Hiển thị danh sách món đã đặt
-        view.displayMessage("Các món đã đặt:");
-        int idx = 1;
-        for (Order.OrderItem oi : order.getItems()) {
-            view.displayMessage(idx + ". " + oi.getItem().getName() + " (ID: " + oi.getItem().getItemId() + ", SL: " + oi.getAmount() + ")");
-            idx++;
-        }
-        String input = view.getInputHandler().getStringWithCancel("Nhập tên, ID hoặc số thứ tự món muốn hủy:");
-        if (input == null) {
-            view.displayMessage("Đã hủy thao tác hủy món.");
-            return;
-        }
-        Order.OrderItem toRemove = null;
-        try {
-            int num = Integer.parseInt(input);
-            if (num >= 1 && num <= order.getItems().size()) {
-                toRemove = order.getItems().get(num-1);
-            } else {
-                // Có thể là ID
-                for (Order.OrderItem oi : order.getItems()) {
-                    if (oi.getItem().getItemId() == num) {
-                        toRemove = oi;
-                        break;
-                    }
-                }
-            }
-        } catch (NumberFormatException e) {
-            // Có thể là tên
-            for (Order.OrderItem oi : order.getItems()) {
-                if (oi.getItem().getName().equalsIgnoreCase(input.trim())) {
-                    toRemove = oi;
-                    break;
-                }
-            }
-        }
+        Order.OrderItem toRemove = view.getOrderItemForRemove(order);
         if (toRemove == null) {
-            view.displayError("Không tìm thấy món phù hợp để hủy.");
+            view.displayMessage("Đã hủy thao tác hủy món.");
             return;
         }
         boolean removed = orderService.removeItemFromOrder(order.getOrderId(), toRemove.getItem().getName());
@@ -451,7 +300,6 @@ public class UserController {
         } else {
             view.displayError("Lỗi khi hủy món.");
         }
-        // Hiển thị lại order
         Order updatedOrder = orderService.findOrderById(order.getOrderId());
         if (updatedOrder != null) {
             view.displayOrder(updatedOrder);
@@ -471,11 +319,11 @@ public class UserController {
         if (userInput == null) {
             view.displayMessage("Đã hủy thao tác đặt bàn qua AI.");
             return;
-            }
+        }
         // Gọi AI Agent, truyền thông tin user
         AIResponse aiResponse = aiController.chatWithAI(userInput, "user", currentCustomer);
-        view.displayMessage("AI: " + aiResponse.getNaturalResponse());
-        // Có thể xử lý tiếp kết quả booking nếu cần
+        // Xử lý action từ AIResponse qua AiService
+        aiService.processAIResponse(aiResponse, orderService, bookingService, customerService, view);
     }
     
     /**
@@ -532,4 +380,14 @@ public class UserController {
     public void setCustomerService(CustomerService customerService) {
         this.customerService = customerService;
     }
+
+    public void setTableService(TableService tableService) {
+        this.tableService = tableService;
+    }
+
+    public void setMenuService(MenuService menuService) {
+        this.menuService = menuService;
+    }
+
+   
 } 

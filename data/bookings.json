@@ -1,34 +1,82 @@
 [
   {
-    "bookingTime": "2025-07-10T10:30",
-    "customerId": 1,
-    "tableId": 1,
-    "numberOfGuests": 2,
-    "bookingId": 1,
-    "status": "CONFIRMED"
-  },
-  {
-    "bookingTime": "2025-07-05T09:00",
-    "customerId": 4,
-    "tableId": 5,
-    "numberOfGuests": 8,
-    "bookingId": 2,
-    "status": "CONFIRMED"
-  },
-  {
-    "bookingTime": "2025-04-07T09:00",
-    "customerId": 4,
-    "tableId": 2,
-    "numberOfGuests": 4,
     "bookingId": 3,
-    "status": "CONFIRMED"
+    "customer": {
+      "customerId": 1,
+      "name": "admin1",
+      "phone": "0900000001",
+      "email": "admin1@restaurant.com",
+      "activeBookingIds": [
+        1,
+        2
+      ],
+      "role": "admin",
+      "password": "1111"
+    },
+    "table": {
+      "tableId": 5,
+      "capacity": 8,
+      "status": "RESERVED",
+      "orderIds": []
+    },
+    "bookingTime": "2025-07-09T19:00:00",
+    "numberOfGuests": 8,
+    "status": "CONFIRMED",
+    "customerId": 0,
+    "tableId": 0
   },
   {
-    "bookingTime": "2025-07-10T19:00",
-    "customerId": 4,
-    "tableId": 3,
-    "numberOfGuests": 4,
     "bookingId": 4,
-    "status": "COMPLETED"
+    "customer": {
+      "customerId": 4,
+      "name": "hoang",
+      "phone": "0946689791",
+      "email": "dongthanhquandtq@gmail.com",
+      "activeBookingIds": [
+        2,
+        3,
+        4
+      ],
+      "role": "user",
+      "password": "1111"
+    },
+    "table": {
+      "tableId": 2,
+      "capacity": 4,
+      "status": "RESERVED",
+      "orderIds": []
+    },
+    "bookingTime": "2025-07-09T19:00:00",
+    "numberOfGuests": 3,
+    "status": "CONFIRMED",
+    "customerId": 0,
+    "tableId": 0
+  },
+  {
+    "bookingId": 5,
+    "customer": {
+      "customerId": 4,
+      "name": "hoang",
+      "phone": "0946689791",
+      "email": "dongthanhquandtq@gmail.com",
+      "activeBookingIds": [
+        2,
+        3,
+        4
+      ],
+      "role": "user",
+      "password": "1111"
+    },
+    "table": {
+      "tableId": 3,
+      "capacity": 4,
+      "status": "RESERVED",
+      "orderIds": []
+    },
+    "bookingTime": "2025-07-10T19:00:00",
+    "numberOfGuests": 3,
+    "status": "CONFIRMED",
+    "customerId": 0,
+    "tableId": 0
   }
 ]

@@ -36,15 +36,19 @@ class CancellationAgent(BaseAgent):
         """
     
     def process_request(self, user_input: str, session_id: str = "default", chat_session=None) -> Dict[str, Any]:
-        # 1. Check if user_input matches any tool
-        tool = self.detect_tool_from_prompt(user_input)
+        # Ưu tiên dùng Gemini để suggest tool
+        tool_name = None
+        if self.tool_detector:
+            tool_name = self.tool_detector.suggest_tool_with_gemini(user_input)
+        tool = None
+        if tool_name:
+            tool = self.tool_detector.get_tool_by_name(tool_name)
+        # Nếu không có tool, KHÔNG fallback detect_tool_from_prompt, chuyển sang trả lời tự nhiên
         if tool:
             # Extract parameters từ user input
             extracted_params = self._extract_cancellation_parameters(user_input, tool)
-            
             # Kiểm tra xem có đủ thông tin không
             missing_params = self._check_missing_parameters(extracted_params, tool)
-            
             if missing_params:
                 # Nếu thiếu thông tin, hỏi thêm
                 return self._ask_for_missing_info(missing_params, tool, user_input)
@@ -55,7 +59,7 @@ class CancellationAgent(BaseAgent):
                     parameters=extracted_params,
                     natural_response=f"Tôi sẽ thực hiện tác vụ: {tool['description']} với thông tin đã cung cấp."
                 )
-        # 2. Fallback: Lấy context từ knowledge base
+        # Nếu không có tool, trả lời tự nhiên dựa vào context/knowledge base
         context = self._get_relevant_context(user_input)
         prompt = f"""
         {self.get_system_prompt()}

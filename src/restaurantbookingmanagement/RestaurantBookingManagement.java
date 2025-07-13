@@ -25,7 +25,7 @@ public class RestaurantBookingManagement {
             MenuService menuService = new MenuService();
             BookingValidator bookingValidator = new BookingValidator();
             BookingService bookingService = new BookingService(tableService, bookingValidator);
-            OrderService orderService = new OrderService(menuService);
+            OrderService orderService = new OrderService(menuService, bookingService, tableService);
 
             // 2. Initialize View
             ConsoleView view = new ConsoleView();

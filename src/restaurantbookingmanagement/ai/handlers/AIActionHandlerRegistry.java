@@ -39,6 +39,9 @@ public class AIActionHandlerRegistry {
         handlers.put("delete_customer", new DeleteCustomerHandler());
         handlers.put("get_customer_info", new GetCustomerInfoHandler());
         handlers.put("customer_search", new CustomerSearchHandler());
+        handlers.put("ask_for_info", new AskForInfoHandler());
+        handlers.put("error", new ErrorHandler());
+        handlers.put("menu_suggestion", new MenuSuggestionActionHandler());
     }
     // --- Handler implementations ---
     public static class DeleteMenuHandler implements AIActionHandler {
@@ -447,6 +450,35 @@ public class AIActionHandlerRegistry {
             } else {
                 view.displayError("❌ Không thể thêm món ăn. Vui lòng thử lại.");
             }
+        }
+    }
+    public static class AskForInfoHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            // Hiển thị câu hỏi bổ sung cho user
+            String question = response.getNaturalResponse();
+            if (question == null || question.trim().isEmpty()) {
+                question = "AI cần thêm thông tin để tiếp tục. Bạn vui lòng cung cấp thông tin còn thiếu.";
+            }
+            view.displayMessage(question);
+            // TODO: Có thể lưu trạng thái pending nếu muốn xử lý tiếp tục sau này
+        }
+    }
+    public static class ErrorHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            String msg = response.getNaturalResponse();
+            if (msg == null || msg.trim().isEmpty()) {
+                msg = "Đã xảy ra lỗi không xác định. Vui lòng thử lại sau.";
+            }
+            view.displayError(msg);
+        }
+    }
+    public static class MenuSuggestionActionHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            // Hiển thị gợi ý món ăn từ naturalResponse
+            view.displayMessage(response.getNaturalResponse());
         }
     }
     public AIActionHandler get(String action) {

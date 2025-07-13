@@ -47,35 +47,25 @@ public class CustomerController {
      * Xem danh sách khách hàng
      */
     private void viewCustomersMenu() {
-        List<Customer> customers = customerService.getAllCustomers();
-        for (Customer c : customers) view.displayMessage(c.toString());
+        view.displayAllCustomers(customerService.getAllCustomers());
     }
     
     /**
      * Thêm khách hàng
      */
     private void addCustomerMenu() {
-        String name = view.getInputHandler().getStringWithCancel("Nhập tên khách hàng:");
-        if (name == null) {
+        Customer newCustomer = view.getRegisterInfo(-1); // -1: auto id
+        if (newCustomer == null) {
             view.displayMessage("Đã hủy thao tác thêm khách hàng.");
             return;
         }
-        String phone = view.getInputHandler().getStringWithCancel("Nhập số điện thoại:");
-        if (phone == null) {
-            view.displayMessage("Đã hủy thao tác thêm khách hàng.");
-            return;
-        }
-        String email = view.getInputHandler().getStringWithCancel("Nhập email:");
-        if (email == null) {
-            view.displayMessage("Đã hủy thao tác thêm khách hàng.");
-            return;
-        }
-        customerService.createCustomer(name, phone, email);
-        view.displaySuccess("Đã thêm khách hàng mới.");
+        boolean created = customerService.createCustomerIfNotExists(newCustomer);
+        if (created) view.displaySuccess("Đã thêm khách hàng mới.");
+        else view.displayError("Khách hàng đã tồn tại (trùng tên, SĐT hoặc email).");
     }
     
     /**
-     * Sửa khách hàng
+     * Sửa khách hàng (gom nhập/xuất về view, nghiệp vụ về service)
      */
     private void editCustomerMenu() {
         String phone = view.getInputHandler().getStringWithCancel("Nhập số điện thoại khách hàng cần sửa:");
@@ -104,7 +94,7 @@ public class CustomerController {
     }
     
     /**
-     * Xóa khách hàng
+     * Xóa khách hàng (gom nhập/xuất về view, nghiệp vụ về service)
      */
     private void deleteCustomerMenu() {
         String phone = view.getInputHandler().getStringWithCancel("Nhập số điện thoại khách hàng cần xóa:");
@@ -118,7 +108,7 @@ public class CustomerController {
     }
     
     /**
-     * Tìm kiếm khách hàng
+     * Tìm kiếm khách hàng (gom nhập/xuất về view, nghiệp vụ về service)
      */
     private void searchCustomerMenu() {
         String keyword = view.getInputHandler().getStringWithCancel("Nhập tên hoặc số điện thoại khách hàng:");
@@ -130,7 +120,7 @@ public class CustomerController {
         if (results.isEmpty()) {
             view.displayError("Không tìm thấy khách hàng phù hợp.");
         } else {
-            for (Customer c : results) view.displayMessage(c.toString());
+            view.displayAllCustomers(results);
         }
     }
     
@@ -163,10 +153,10 @@ public class CustomerController {
     }
     
     /**
-     * Hiển thị tất cả khách hàng
+     * Hiển thị tất cả khách hàng (gom về view)
      */
     public void displayAllCustomers() {
-        customerService.displayAllCustomers();
+        view.displayAllCustomers(customerService.getAllCustomers());
     }
     
     /**

@@ -74,7 +74,13 @@ public class OrderController {
      */
     private void viewOrdersMenu() {
         List<Order> orders = orderService.getAllOrders();
-        view.displayListOrder(orders);
+        if (orders.isEmpty()) {
+            view.displayMessage("Không có đơn hàng nào.");
+            return;
+        }
+        for (Order order : orders) {
+            view.displayOrderTable(order);
+        }
     }
     
     /**
@@ -153,7 +159,7 @@ public class OrderController {
             return;
         }
         Order order = orderService.findOrderById(id);
-        if (order != null) view.displayMessage(order.toString());
+        if (order != null) view.displayOrderTable(order);
         else view.displayError("Không tìm thấy đơn hàng với ID này.");
     }
     
@@ -170,7 +176,7 @@ public class OrderController {
         boolean found = false;
         for (Order o : orders) {
             if (o.getName().toLowerCase().contains(name.toLowerCase())) {
-                view.displayMessage(o.toString());
+                view.displayOrderTable(o);
                 found = true;
             }
         }
@@ -190,7 +196,7 @@ public class OrderController {
         boolean found = false;
         for (Order o : orders) {
             if (o.getPrice() == price) {
-                view.displayMessage(o.toString());
+                view.displayOrderTable(o);
                 found = true;
             }
         }

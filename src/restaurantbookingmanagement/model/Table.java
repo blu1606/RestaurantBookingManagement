@@ -11,7 +11,7 @@ public class Table {
     private int capacity;
     private TableStatus status;
     private List<Integer> orderIds; // Danh sách orderId của bàn này
-    private TableState state;
+    private transient TableState state;
     
     // No-args constructor for Gson deserialization
     public Table() {

@@ -18,7 +18,7 @@ public enum TableStatus {
     public String getDescription() {
         return description;
     }
-}
+} 
 
 // End of TableStatus enum
 

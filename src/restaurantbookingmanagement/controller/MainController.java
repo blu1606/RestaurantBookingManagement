@@ -5,7 +5,7 @@ import restaurantbookingmanagement.service.*;
 import restaurantbookingmanagement.view.*;
 
 /**
- * Controller chính điều phối toàn bộ ứng dụng
+ * Controller chính điều phối toàn bộ ứng dụng (chỉ điều phối, không chứa logic nhập/xuất hoặc nghiệp vụ chi tiết)
  */
 public class MainController {
     private final AuthController authController;
@@ -34,6 +34,8 @@ public class MainController {
         // Khởi tạo user controller
         this.userController = new UserController(bookingService, orderService, view, authController);
         this.userController.setCustomerService(customerService);
+        this.userController.setTableService(tableService);
+        this.userController.setMenuService(menuService);
         
         // Khởi tạo manager controller
         this.managerController = new ManagerController(menuController, tableController, 
@@ -46,21 +48,29 @@ public class MainController {
      */
     public void run() {
         view.showWelcomeMessage();
+        while (true) {
         showEntryMenu();
+        }
     }
     
     /**
-     * Hiển thị menu đăng nhập/đăng ký
+     * Hiển thị menu đăng nhập/đăng ký (chỉ điều phối, không chứa logic nhập/xuất chi tiết)
      */
     private void showEntryMenu() {
         authController.showEntryMenu();
         
         // Sau khi đăng nhập/đăng ký, hiển thị menu tương ứng
         Role currentRole = authController.getCurrentRole();
+        boolean logout = false;
         if (currentRole == Role.MANAGER) {
-            managerController.showManagerMenu();
+            logout = managerController.showManagerMenuWithLogout();
         } else {
-            userController.showUserMenu();
+            logout = userController.showUserMenuWithLogout();
+        }
+        if (logout) {
+            authController.setCurrentCustomer(null);
+            authController.setCurrentRole(null);
+            view.displayMessage("Đã đăng xuất. Quay lại menu đăng nhập...");
         }
     }
 } 
