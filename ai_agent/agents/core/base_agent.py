@@ -6,6 +6,7 @@ from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import google.generativeai as genai
+import pickle
 
 
 from ..utils.rate_limiter import RateLimiter
@@ -127,23 +128,42 @@ class BaseAgent(ABC):
     
     def _build_vector_db(self):
         """
-        Xây dựng vector database từ knowledge base
+        Xây dựng hoặc load vector database từ knowledge base, sử dụng batch embedding
         """
         try:
             if not self.knowledge_base:
                 return
+            # Đường dẫn cache vector DB
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+            cache_dir = os.path.join(project_root, "data", "vector_db_cache")
+            os.makedirs(cache_dir, exist_ok=True)
+            cache_file = os.path.join(cache_dir, f"{self.agent_name}_vector_db.pkl")
+            # Nếu đã có file cache, load lại
+            if os.path.exists(cache_file):
+                with open(cache_file, 'rb') as f:
+                    self.vector_db = pickle.load(f)
+                self.retriever = self.vector_db.as_retriever(search_kwargs={"k": 3})
+                print(f"✅ {self.agent_name}: Loaded vector DB from cache {cache_file}")
+                return
+            # Nếu chưa có, build mới với batch embedding
             documents = []
+            texts = []
             for item in self.knowledge_base:
                 content = self._format_knowledge_item(item)
                 metadata = {"source": self.agent_name, "type": item.get("type", "general")}
                 documents.append(Document(page_content=content, metadata=metadata))
+                texts.append(content)
             if documents:
-                embeddings = self.data_tool_manager.embedding_model
-                self.vector_db = Chroma.from_documents(documents, embeddings)
+                embeddings = self.data_tool_manager.get_embeddings_batch(texts)
+                from langchain_chroma import Chroma
+                self.vector_db = Chroma.from_embeddings(texts, embeddings, metadatas=[doc.metadata for doc in documents])
                 self.retriever = self.vector_db.as_retriever(search_kwargs={"k": 3})
-                print(f"✅ {self.agent_name}: Vector DB built with {len(documents)} documents")
+                # Lưu lại vector DB vào cache
+                with open(cache_file, 'wb') as f:
+                    pickle.dump(self.vector_db, f)
+                print(f"✅ {self.agent_name}: Vector DB built (batch) and cached with {len(documents)} documents at {cache_file}")
         except Exception as e:
-            print(f"🔥 {self.agent_name}: Error building vector DB: {e}")
+            print(f"🔥 {self.agent_name}: Error building/loading vector DB: {e}")
     
     def _format_knowledge_item(self, item: Dict[str, Any]) -> str:
         """
@@ -190,10 +210,24 @@ class BaseAgent(ABC):
             print(f"🔥 {self.agent_name}: Error calling Gemini: {e}")
             return "Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu."
     
+    def _vector_db_cache_file(self):
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        cache_dir = os.path.join(project_root, "data", "vector_db_cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        return os.path.join(cache_dir, f"{self.agent_name}_vector_db.pkl")
+
     def refresh_knowledge(self):
         """
-        Refresh knowledge base từ file
+        Refresh knowledge base từ file và xóa cache vector DB nếu có
         """
+        # Xóa cache vector DB nếu tồn tại
+        cache_file = self._vector_db_cache_file()
+        if os.path.exists(cache_file):
+            try:
+                os.remove(cache_file)
+                print(f"🗑️ {self.agent_name}: Removed vector DB cache {cache_file}")
+            except Exception as e:
+                print(f"⚠️ {self.agent_name}: Failed to remove vector DB cache: {e}")
         self._load_knowledge_base()
     
     @abstractmethod

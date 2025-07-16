@@ -269,7 +269,7 @@ class DataToolManager:
                     self._safe_write_pickle(emb, cache_path)
                 except Exception as e:
                     logger.error(f"Error writing cache for embedding: {e}")
-                logger.info(f"Loaded embedding from source: {texts[idx][:30]}...")
+                # logger.info(f"Loaded embedding from source: {texts[idx][:30]}...")  # Tắt log này
                 results[idx] = emb
         return results
 

@@ -10,6 +10,7 @@ from ..specialized.information_agent import InformationAgent
 from ..specialized.feedback_agent import FeedbackAgent
 from ..specialized.fallback_agent import FallbackAgent
 from ..specialized.order_agent import OrderAgent
+import threading
 
 class AgentManager:
     """
@@ -29,20 +30,31 @@ class AgentManager:
     
     def _initialize_agents(self):
         """
-        Khởi tạo tất cả các AI Agent
+        Khởi tạo tất cả các AI Agent song song bằng threading
         """
         try:
-            self.agents = {
-                "GreetingAgent": GreetingAgent(self.gemini_model),
-                "MenuAgent": MenuAgent(self.gemini_model, user_role="user"),
-                "BookingAgent": BookingAgent(self.gemini_model, user_role="user"),
-                "CancellationAgent": CancellationAgent(self.gemini_model, user_role="user"),
-                "InformationAgent": InformationAgent(self.gemini_model),
-                "FeedbackAgent": FeedbackAgent(self.gemini_model),
-                "OrderAgent": OrderAgent(self.gemini_model, user_role="user"),
-                "FallbackAgent": FallbackAgent(self.gemini_model)
-            }
-            print("✅ All AI Agents initialized successfully")
+            agent_classes = [
+                ("GreetingAgent", GreetingAgent, {}),
+                ("MenuAgent", MenuAgent, {"user_role": "user"}),
+                ("BookingAgent", BookingAgent, {"user_role": "user"}),
+                ("CancellationAgent", CancellationAgent, {"user_role": "user"}),
+                ("InformationAgent", InformationAgent, {}),
+                ("FeedbackAgent", FeedbackAgent, {}),
+                ("OrderAgent", OrderAgent, {"user_role": "user"}),
+                ("FallbackAgent", FallbackAgent, {})
+            ]
+            agents = {}
+            threads = []
+            def create_agent(name, cls, kwargs):
+                agents[name] = cls(self.gemini_model, **kwargs) if kwargs else cls(self.gemini_model)
+            for name, cls, kwargs in agent_classes:
+                t = threading.Thread(target=create_agent, args=(name, cls, kwargs))
+                threads.append(t)
+                t.start()
+            for t in threads:
+                t.join()
+            self.agents = agents
+            print("✅ All AI Agents initialized successfully (threaded)")
         except Exception as e:
             print(f"🔥 Error initializing agents: {e}")
     
