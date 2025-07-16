@@ -4,11 +4,7 @@
     "name": "admin1",
     "phone": "0900000001",
     "email": "admin1@restaurant.com",
-    "activeBookingIds": [
-      1,
-      2,
-      3
-    ],
+    "activeBookingIds": [],
     "role": "admin",
     "password": "1111"
   },
@@ -35,12 +31,7 @@
     "name": "hoang",
     "phone": "0946689791",
     "email": "dongthanhquandtq@gmail.com",
-    "activeBookingIds": [
-      2,
-      3,
-      4,
-      5
-    ],
+    "activeBookingIds": [],
     "role": "user",
     "password": "1111"
   }

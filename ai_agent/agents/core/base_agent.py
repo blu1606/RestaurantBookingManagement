@@ -10,6 +10,7 @@ import google.generativeai as genai
 
 from ..utils.rate_limiter import RateLimiter
 from ..utils.tool_detector import ToolDetector
+from ..utils.data_tool_manager import DataToolManager
 
 
 class BaseAgent(ABC):
@@ -28,6 +29,7 @@ class BaseAgent(ABC):
         self.retriever = None
         self.knowledge_base = []
         self.rate_limiter = RateLimiter()
+        self.data_tool_manager = DataToolManager()
         
         # Load permissions trước
         self._load_permissions()
@@ -76,35 +78,19 @@ class BaseAgent(ABC):
         Load tools từ file tools_customer.json (chỉ tools dành cho customer)
         """
         try:
-            # Ưu tiên sử dụng tools_customer.json
             tools_path = os.path.join(os.path.dirname(__file__), "..", "..", "tools_customer.json")
             if not os.path.exists(tools_path):
-                # Fallback về tools.json nếu không có file customer
                 tools_path = os.path.join(os.path.dirname(__file__), "..", "..", "tools.json")
-            
-            with open(tools_path, 'r', encoding='utf-8') as f:
-                tools_data = json.load(f)
-            
-            # Filter tools theo agent allowed_tools và role permissions
-            filtered_tools = []
-            for tool in tools_data:
-                # Kiểm tra agent allowed_tools
-                if self.allowed_tools and tool.get("name") not in self.allowed_tools:
-                    continue
-                
-                # Kiểm tra role permissions từ agent_permissions.json
-                if hasattr(self, 'role_permissions') and self.role_permissions:
-                    if tool.get("name") not in self.role_permissions:
-                        continue
-                
-                filtered_tools.append(tool)
-            
-            tools_data = filtered_tools
-            print(f"✅ {self.agent_name}: Filtered {len(filtered_tools)} tools for role '{self.user_role}' from {len(tools_data)} total tools")
-            
-            # Sử dụng singleton ToolDetector
-            self.tool_detector = ToolDetector.get_instance(tools_data)
-            print(f"✅ {self.agent_name}: Loaded {len(tools_data)} tools from {os.path.basename(tools_path)}")
+            # Lấy tools đã lọc từ DataToolManager (cache theo role/allowed_tools)
+            filtered_tools = self.data_tool_manager.get_filtered_tools(
+                tools_path,
+                self.user_role,
+                self.allowed_tools,
+                getattr(self, 'role_permissions', None)
+            )
+            print(f"✅ {self.agent_name}: Filtered {len(filtered_tools)} tools for role '{self.user_role}' from {len(filtered_tools)} total tools")
+            self.tool_detector = ToolDetector.get_instance(filtered_tools)
+            print(f"✅ {self.agent_name}: Loaded {len(filtered_tools)} tools from {os.path.basename(tools_path)}")
         except Exception as e:
             print(f"🔥 {self.agent_name}: Error loading tools: {e}")
             self.tool_detector = None
@@ -115,43 +101,23 @@ class BaseAgent(ABC):
         """
         try:
             self.knowledge_base = []
-            
-            # Get the absolute path to the data directory
-            # Try multiple possible paths
-            possible_data_dirs = [
-                os.path.join(os.path.dirname(__file__), "..", "..", "..", "data"),  # From ai_agent/agents/core/
-                os.path.join(os.path.dirname(__file__), "..", "..", "data"),       # From ai_agent/agents/
-                os.path.join(os.getcwd(), "data"),                                  # From project root
-                "data"                                                             # Relative to current working directory
-            ]
-            
-            data_dir = None
-            for dir_path in possible_data_dirs:
-                if os.path.exists(dir_path):
-                    data_dir = dir_path
-                    break
-            
-            if not data_dir:
-                print(f"🔥 {self.agent_name}: Could not find data directory")
+            # Luôn lấy data_dir là thư mục data ở project root
+            project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+            data_dir = os.path.join(project_root, "data")
+            if not os.path.exists(data_dir):
+                print(f"🔥 {self.agent_name}: Could not find data directory at {data_dir}")
                 return
-            
-            # Load from specified data files
             for data_file in self.data_files:
-                # Remove any "../" prefixes from data_file as we're using absolute paths
                 clean_data_file = data_file.replace("../", "").replace("../../", "")
-                file_path = os.path.join(data_dir, clean_data_file)
-                
-                if os.path.exists(file_path):
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        # Add metadata to identify source
-                        for item in data:
-                            item['_source_file'] = data_file
-                        self.knowledge_base.extend(data)
+                abs_data_path = os.path.join(data_dir, clean_data_file)
+                if os.path.exists(abs_data_path):
+                    data = self.data_tool_manager.load_data(clean_data_file, [data_dir])
+                    for item in data:
+                        item['_source_file'] = data_file
+                    self.knowledge_base.extend(data)
                     print(f"✅ {self.agent_name}: Loaded data from {data_file}")
                 else:
-                    print(f"⚠️ {self.agent_name}: Data file {data_file} not found at {file_path}")
-            
+                    print(f"⚠️ {self.agent_name}: Data file {data_file} not found at {abs_data_path}")
             if self.knowledge_base:
                 print(f"✅ {self.agent_name}: Loaded {len(self.knowledge_base)} items from data files")
             else:
@@ -166,16 +132,13 @@ class BaseAgent(ABC):
         try:
             if not self.knowledge_base:
                 return
-            
-            # Convert knowledge base to documents
             documents = []
             for item in self.knowledge_base:
                 content = self._format_knowledge_item(item)
                 metadata = {"source": self.agent_name, "type": item.get("type", "general")}
                 documents.append(Document(page_content=content, metadata=metadata))
-            
             if documents:
-                embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+                embeddings = self.data_tool_manager.embedding_model
                 self.vector_db = Chroma.from_documents(documents, embeddings)
                 self.retriever = self.vector_db.as_retriever(search_kwargs={"k": 3})
                 print(f"✅ {self.agent_name}: Vector DB built with {len(documents)} documents")

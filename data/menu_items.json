@@ -24,6 +24,102 @@
     "description": "Bánh mì giòn với thịt nướng và rau sống."
   },
   {
+    "itemId": 105,
+    "name": "Phở Gà",
+    "price": 48000.0,
+    "description": "Phở gà nước dùng ngọt thanh, thịt gà ta mềm."
+  },
+  {
+    "itemId": 106,
+    "name": "Bún Riêu Cua",
+    "price": 42000.0,
+    "description": "Bún riêu cua đồng chuẩn vị, gạch cua béo ngậy."
+  },
+  {
+    "itemId": 107,
+    "name": "Mì Quảng",
+    "price": 40000.0,
+    "description": "Mì Quảng đặc trưng miền Trung với nước lèo đậm đà."
+  },
+  {
+    "itemId": 108,
+    "name": "Hủ Tiếu Nam Vang",
+    "price": 52000.0,
+    "description": "Hủ tiếu nước lèo trong, topping đa dạng."
+  },
+  {
+    "itemId": 109,
+    "name": "Bún Bò Huế",
+    "price": 50000.0,
+    "description": "Bún bò Huế cay nồng, thơm mùi sả."
+  },
+  {
+    "itemId": 110,
+    "name": "Nem Lụi",
+    "price": 60000.0,
+    "description": "Nem lụi nướng than hoa, ăn kèm rau sống và bánh tráng."
+  },
+  {
+    "itemId": 111,
+    "name": "Gỏi Cuốn",
+    "price": 30000.0,
+    "description": "Gỏi cuốn thanh mát với tôm, thịt, rau sống."
+  },
+  {
+    "itemId": 112,
+    "name": "Bánh Xèo",
+    "price": 55000.0,
+    "description": "Bánh xèo giòn rụm, nhân tôm thịt, giá đỗ."
+  },
+  {
+    "itemId": 113,
+    "name": "Chả Giò",
+    "price": 40000.0,
+    "description": "Chả giò chiên giòn, nhân thịt, mộc nhĩ."
+  },
+  {
+    "itemId": 114,
+    "name": "Lẩu Thái",
+    "price": 250000.0,
+    "description": "Lẩu Thái chua cay, đậm đà hương vị."
+  },
+  {
+    "itemId": 115,
+    "name": "Bò Né",
+    "price": 70000.0,
+    "description": "Bò né nóng hổi, thịt bò mềm."
+  },
+  {
+    "itemId": 116,
+    "name": "Bún Đậu Mắm Tôm",
+    "price": 45000.0,
+    "description": "Bún đậu mắm tôm chuẩn vị Hà Nội."
+  },
+  {
+    "itemId": 117,
+    "name": "Bánh Canh Cua",
+    "price": 48000.0,
+    "description": "Bánh canh cua sệt, thịt cua tươi ngon."
+  },
+  {
+    "itemId": 118,
+    "name": "Cá Nướng",
+    "price": 120000.0,
+    "description": "Cá nướng giấy bạc, thơm lừng."
+  },
+  {
+    "itemId": 119,
+    "name": "Gà Quay",
+    "price": 150000.0,
+    "description": "Gà quay nguyên con, da giòn thịt mềm."
+  },
+  {
+    "itemId": 120,
+    "name": "Canh Chua Cá",
+    "price": 80000.0,
+    "description": "Canh chua cá lóc miền Tây, vị chua ngọt hài hòa."
+  },
+  {
     "itemId": 201,
     "name": "Cà phê sữa đá",
     "price": 25000.0,
@@ -43,20 +139,164 @@
   },
   {
     "itemId": 204,
-    "name": "coffee",
+    "name": "Nước dừa tươi",
     "price": 20000.0,
-    "description": "cà phê thơm ngon"
+    "description": "Nước dừa xiêm ngọt mát."
   },
   {
     "itemId": 205,
-    "name": "Bánh Oreo",
-    "price": 15000.0,
-    "description": "Bánh oreo ngon lắm"
+    "name": "Sinh tố bơ",
+    "price": 35000.0,
+    "description": "Sinh tố bơ sánh mịn, bổ dưỡng."
   },
   {
     "itemId": 206,
-    "name": "Cháo bò",
+    "name": "Nước ép dứa",
+    "price": 28000.0,
+    "description": "Nước ép dứa tươi, giải khát."
+  },
+  {
+    "itemId": 207,
+    "name": "Sữa đậu nành",
+    "price": 18000.0,
+    "description": "Sữa đậu nành tự làm, không đường."
+  },
+  {
+    "itemId": 208,
+    "name": "Trà đào cam sả",
+    "price": 35000.0,
+    "description": "Trà đào thơm, vị cam sả thanh mát."
+  },
+  {
+    "itemId": 209,
+    "name": "Nước chanh muối",
+    "price": 22000.0,
+    "description": "Nước chanh muối giải khát, tốt cho sức khỏe."
+  },
+  {
+    "itemId": 210,
+    "name": "Smoothie xoài",
+    "price": 40000.0,
+    "description": "Smoothie xoài tươi ngon, mát lạnh."
+  },
+  {
+    "itemId": 211,
+    "name": "Bia Sài Gòn",
+    "price": 20000.0,
+    "description": "Bia Sài Gòn Lager."
+  },
+  {
+    "itemId": 212,
+    "name": "Nước ngọt Coca-Cola",
+    "price": 15000.0,
+    "description": "Nước ngọt có ga."
+  },
+  {
+    "itemId": 213,
+    "name": "Bánh flan",
+    "price": 20000.0,
+    "description": "Bánh flan mềm mịn, caramen ngọt ngào."
+  },
+  {
+    "itemId": 214,
+    "name": "Chè chuối",
     "price": 25000.0,
-    "description": "cháo bò ngọt xương"
+    "description": "Chè chuối nước cốt dừa, thạch dừa."
+  },
+  {
+    "itemId": 215,
+    "name": "Kem dừa",
+    "price": 30000.0,
+    "description": "Kem dừa tươi, thơm béo."
+  },
+  {
+    "itemId": 301,
+    "name": "Trứng ốp la",
+    "price": 15000.0,
+    "description": "Trứng ốp la lòng đào."
+  },
+  {
+    "itemId": 302,
+    "name": "Khoai tây chiên",
+    "price": 30000.0,
+    "description": "Khoai tây chiên giòn rụm."
+  },
+  {
+    "itemId": 303,
+    "name": "Salad trộn",
+    "price": 45000.0,
+    "description": "Salad tươi ngon với rau xanh và sốt."
+  },
+  {
+    "itemId": 304,
+    "name": "Gỏi gà",
+    "price": 70000.0,
+    "description": "Gỏi gà xé phay, rau răm, hành tây."
+  },
+  {
+    "itemId": 305,
+    "name": "Canh bí đao",
+    "price": 35000.0,
+    "description": "Canh bí đao nấu thịt băm."
+  },
+  {
+    "itemId": 306,
+    "name": "Rau muống xào tỏi",
+    "price": 30000.0,
+    "description": "Rau muống xào tỏi thơm lừng."
+  },
+  {
+    "itemId": 307,
+    "name": "Đậu phụ sốt cà chua",
+    "price": 40000.0,
+    "description": "Đậu phụ chiên vàng, sốt cà chua."
+  },
+  {
+    "itemId": 308,
+    "name": "Cơm trắng",
+    "price": 10000.0,
+    "description": "Cơm trắng dẻo thơm."
+  },
+  {
+    "itemId": 309,
+    "name": "Cháo lòng",
+    "price": 40000.0,
+    "description": "Cháo lòng heo thơm ngon."
+  },
+  {
+    "itemId": 310,
+    "name": "Bánh bao nhân thịt",
+    "price": 20000.0,
+    "description": "Bánh bao nóng hổi, nhân thịt."
+  },
+  {
+    "itemId": 311,
+    "name": "Súp cua",
+    "price": 45000.0,
+    "description": "Súp cua nóng hổi, trứng cút."
+  },
+  {
+    "itemId": 312,
+    "name": "Bún mắm",
+    "price": 55000.0,
+    "description": "Bún mắm miền Tây đặc trưng."
+  },
+  {
+    "itemId": 313,
+    "name": "Cá kho tộ",
+    "price": 90000.0,
+    "description": "Cá kho tộ đậm đà, thơm mùi tiêu."
+  },
+  {
+    "itemId": 314,
+    "name": "Thịt kho tàu",
+    "price": 85000.0,
+    "description": "Thịt kho tàu mềm rục, trứng cút."
+  },
+  {
+    "itemId": 315,
+    "name": "Gà nướng muối ớt",
+    "price": 180000.0,
+    "description": "Gà nướng muối ớt cay thơm."
   }
 ]
