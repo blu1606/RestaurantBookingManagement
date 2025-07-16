@@ -35,8 +35,6 @@
   - [🤖 Usage](#🤖-usage)
   - [🧪 Testing](#🧪-testing)
 - [📌 Project Roadmap](#-project-roadmap)
-- [🔰 Contributing](#-contributing)
-- [🎗 License](#-license)
 - [🙌 Acknowledgments](#-acknowledgments)
 
 ---
@@ -532,6 +530,76 @@ RestaurantBookingManagement/
 ## 🧠 Giải thích về AI Agent, mô hình & luồng hoạt động
 
 ### 1. **AI Routing (RouterAI)**
+```mermaid
+flowchart TD
+    A[Input tiếng Việt từ người dùng] --> B[RouterAI]
+    
+    subgraph "RouterAI Processing"
+        B --> C[Gemini LLM]
+        C --> D[Intent Classification]
+        D --> E[Mapping Intent to Agent]
+        E --> F[Return: Agent + Intent + Confidence]
+    end
+    
+    F --> G[AgentManager]
+    
+    subgraph "Intent Classification"
+        H[greeting<br/>Chào hỏi, giới thiệu]
+        I[menu_recommendation<br/>Gợi ý món ăn, hỏi menu]
+        J[booking<br/>Đặt bàn, kiểm tra bàn trống]
+        K[cancellation<br/>Hủy bàn]
+        L[order<br/>Đặt món, kiểm tra đơn hàng]
+        M[feedback<br/>Góp ý, đánh giá]
+        N[information<br/>Hỏi thông tin nhà hàng]
+        O[fallback<br/>Xử lý câu hỏi ngoài phạm vi]
+    end
+    
+    subgraph "Specialized Agents"
+        P[GreetingAgent]
+        Q[MenuAgent]
+        R[BookingAgent]
+        S[CancellationAgent]
+        T[OrderAgent]
+        U[FeedbackAgent]
+        V[InfoAgent]
+        W[FallbackAgent]
+    end
+    
+    %% Intent to Agent Mapping
+    D -.-> H
+    D -.-> I
+    D -.-> J
+    D -.-> K
+    D -.-> L
+    D -.-> M
+    D -.-> N
+    D -.-> O
+    
+    %% Agent Routing
+    G --> P
+    G --> Q
+    G --> R
+    G --> S
+    G --> T
+    G --> U
+    G --> V
+    G --> W
+    
+    %% Styling
+    classDef input fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef router fill:#e3f2fd,stroke:#0277bd,stroke-width:2px
+    classDef llm fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef intent fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef agent fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef manager fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    
+    class A input
+    class B,E,F router
+    class C,D llm
+    class H,I,J,K,L,M,N,O intent
+    class P,Q,R,S,T,U,V,W agent
+    class G manager
+```
 - **RouterAI** là thành phần trung tâm chịu trách nhiệm phân tích ý định (intent) của người dùng và điều hướng (route) yêu cầu đến agent chuyên biệt phù hợp.
 - **Cách hoạt động:**
   1. Nhận input tiếng Việt tự nhiên từ người dùng.
@@ -550,9 +618,41 @@ RestaurantBookingManagement/
 - **Ví dụ routing:**
   - "Tôi muốn đặt bàn cho 2 người tối nay" → intent: booking → BookingAgent
   - "Có món phở không?" → intent: menu_recommendation → MenuAgent
-
 ### 2. **Luồng hoạt động tổng thể**
 
+```mermaid
+sequenceDiagram
+    participant U as Người dùng
+    participant C as Console/API
+    participant J as Java Backend
+    participant P as Python AI Agent
+    participant R as RouterAI
+    participant A as Agent chuyên biệt
+    participant D as Database/Data
+    
+    U->>C: 1. Nhập câu hỏi/nhu cầu tự nhiên
+    C->>J: 2. Gửi request
+    J->>P: 3. Chuyển tiếp qua HTTP API
+    
+    Note over P,R: AI Processing
+    P->>R: Phân tích input
+    R->>R: Intent classification
+    R->>A: Chọn agent chuyên biệt
+    
+    Note over A,D: Data Processing
+    A->>D: Truy vấn dữ liệu<br/>(menu, booking, v.v.)
+    D->>A: Trả về dữ liệu
+    A->>A: Sinh phản hồi tự động
+    
+    Note over P,J: Response Flow
+    A->>P: Kết quả xử lý
+    P->>J: 4. Trả về kết quả
+    J->>C: 5. Hiển thị cho người dùng
+    C->>U: Kết quả cuối cùng
+    
+    %% Styling
+    Note over U,D: Luồng hoạt động tổng thể - 5 bước chính
+```
 1. Người dùng nhập câu hỏi/nhu cầu tự nhiên (console hoặc API).
 2. Java backend nhận request, chuyển tiếp tới Python AI Agent qua HTTP API.
 3. AI Agent (RouterAI) phân tích intent, chọn agent chuyên biệt.
@@ -741,19 +841,6 @@ flowchart LR
 - [ ] Giao diện web/mobile
 - [ ] Tích hợp thanh toán online
 - [ ] Báo cáo, thống kê nâng cao
-
----
-
-## 🔰 Contributing
-
-Đóng góp ý kiến, pull request, hoặc báo lỗi qua GitHub Issues.
-
----
-
-## 🎗 License
-
-MIT License
-
 ---
 
 ## 🙌 Acknowledgments
