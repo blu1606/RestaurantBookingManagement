@@ -35,6 +35,7 @@ class DataToolManager:
     _instance = None
     _RAM_CACHE_SIZE = 1000
     _MAX_CACHE_SIZE_BYTES = 1 * 1024 * 1024 * 1024  # 1GB
+    _MAX_BATCH_SIZE = 10  # Limit batch size to avoid timeouts
 
     def __new__(cls):
         if cls._instance is None:
@@ -223,15 +224,38 @@ class DataToolManager:
                     os.remove(cache_path)
                 except Exception:
                     pass
-        embedding = self.embedding_model.embed_query(text)
-        with self._embeddings_lock:
-            self._embeddings_cache[text] = embedding
-        try:
-            self._safe_write_pickle(embedding, cache_path)
-        except Exception as e:
-            logger.error(f"Error writing cache for embedding: {e}")
-        logger.info(f"Loaded embedding from source: {text[:30]}...")
-        return embedding
+        
+        # Add retry logic for single embedding
+        import time
+        max_retries = 3
+        retry_delay = 1  # seconds
+        
+        for attempt in range(max_retries):
+            try:
+                embedding = self.embedding_model.embed_query(text)
+                with self._embeddings_lock:
+                    self._embeddings_cache[text] = embedding
+                try:
+                    self._safe_write_pickle(embedding, cache_path)
+                except Exception as e:
+                    logger.error(f"Error writing cache for embedding: {e}")
+                logger.info(f"Loaded embedding from source: {text[:30]}...")
+                return embedding
+            except Exception as e:
+                if "504" in str(e) or "Deadline Exceeded" in str(e):
+                    if attempt < max_retries - 1:
+                        logger.warning(f"Embedding timeout (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay}s...")
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
+                        continue
+                    else:
+                        logger.error(f"Embedding failed after {max_retries} attempts: {e}")
+                        return []  # Return empty embedding as fallback
+                else:
+                    logger.error(f"Embedding failed: {e}")
+                    return []  # Return empty embedding as fallback
+        
+        return []  # Fallback
 
     def get_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
         results = []
@@ -246,31 +270,93 @@ class DataToolManager:
                     results.append(None)
                     uncached_indices.append(idx)
                     uncached_texts.append(text)
+        
         # Nếu có text chưa cache, gọi batch embedding nếu API hỗ trợ
-        batch_embeddings = []
         if uncached_texts:
-            # Thử gọi batch, nếu không có thì fallback từng cái
-            embed_fn = getattr(self.embedding_model, 'embed_documents', None)
-            if callable(embed_fn):
-                try:
-                    batch_embeddings = self.embedding_model.embed_documents(uncached_texts)
-                except Exception as e:
-                    logger.warning(f"Batch embedding failed, fallback to single: {e}")
-                    batch_embeddings = [self.embedding_model.embed_query(t) for t in uncached_texts]
-            else:
-                batch_embeddings = [self.embedding_model.embed_query(t) for t in uncached_texts]
+            # Process in smaller batches to avoid timeouts
+            all_batch_embeddings = []
+            for i in range(0, len(uncached_texts), self._MAX_BATCH_SIZE):
+                batch_texts = uncached_texts[i:i + self._MAX_BATCH_SIZE]
+                batch_results = []
+                
+                # Thử gọi batch, nếu không có thì fallback từng cái
+                embed_fn = getattr(self.embedding_model, 'embed_documents', None)
+                if callable(embed_fn):
+                    try:
+                        # Thêm timeout và retry logic cho batch embedding
+                        import time
+                        max_retries = 3
+                        retry_delay = 2  # seconds
+                        
+                        for attempt in range(max_retries):
+                            try:
+                                batch_results = self.embedding_model.embed_documents(batch_texts)
+                                break  # Success, exit retry loop
+                            except Exception as e:
+                                if "504" in str(e) or "Deadline Exceeded" in str(e):
+                                    if attempt < max_retries - 1:
+                                        logger.warning(f"Batch embedding timeout (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay}s...")
+                                        time.sleep(retry_delay)
+                                        retry_delay *= 2  # Exponential backoff
+                                        continue
+                                    else:
+                                        logger.warning(f"Batch embedding failed after {max_retries} attempts, fallback to single: {e}")
+                                        batch_results = []
+                                        for t in batch_texts:
+                                            try:
+                                                emb = self.embedding_model.embed_query(t)
+                                                batch_results.append(emb)
+                                            except Exception as single_e:
+                                                logger.error(f"Single embedding failed for text '{t[:30]}...': {single_e}")
+                                                batch_results.append([])  # Empty embedding as fallback
+                                        break
+                                else:
+                                    # Non-timeout error, fallback immediately
+                                    logger.warning(f"Batch embedding failed, fallback to single: {e}")
+                                    batch_results = []
+                                    for t in batch_texts:
+                                        try:
+                                            emb = self.embedding_model.embed_query(t)
+                                            batch_results.append(emb)
+                                        except Exception as single_e:
+                                            logger.error(f"Single embedding failed for text '{t[:30]}...': {single_e}")
+                                            batch_results.append([])  # Empty embedding as fallback
+                                    break
+                    except Exception as e:
+                        logger.warning(f"Batch embedding failed, fallback to single: {e}")
+                        batch_results = []
+                        for t in batch_texts:
+                            try:
+                                emb = self.embedding_model.embed_query(t)
+                                batch_results.append(emb)
+                            except Exception as single_e:
+                                logger.error(f"Single embedding failed for text '{t[:30]}...': {single_e}")
+                                batch_results.append([])  # Empty embedding as fallback
+                else:
+                    batch_results = []
+                    for t in batch_texts:
+                        try:
+                            emb = self.embedding_model.embed_query(t)
+                            batch_results.append(emb)
+                        except Exception as single_e:
+                            logger.error(f"Single embedding failed for text '{t[:30]}...': {single_e}")
+                            batch_results.append([])  # Empty embedding as fallback
+                
+                all_batch_embeddings.extend(batch_results)
+            
             # Cache kết quả
-            for idx, emb in zip(uncached_indices, batch_embeddings):
-                with self._embeddings_lock:
-                    self._embeddings_cache[texts[idx]] = emb
-                # Lưu ra file cache
-                cache_path = self._embedding_cache_path(texts[idx])
-                try:
-                    self._safe_write_pickle(emb, cache_path)
-                except Exception as e:
-                    logger.error(f"Error writing cache for embedding: {e}")
-                # logger.info(f"Loaded embedding from source: {texts[idx][:30]}...")  # Tắt log này
+            for idx, emb in zip(uncached_indices, all_batch_embeddings):
+                if emb:  # Only cache non-empty embeddings
+                    with self._embeddings_lock:
+                        self._embeddings_cache[texts[idx]] = emb
+                    # Lưu ra file cache
+                    cache_path = self._embedding_cache_path(texts[idx])
+                    try:
+                        self._safe_write_pickle(emb, cache_path)
+                    except Exception as e:
+                        logger.error(f"Error writing cache for embedding: {e}")
                 results[idx] = emb
+        
         return results
 
     def get_filtered_tools(self, tools_file: str, role: str, allowed_tools: list, role_permissions: list = None) -> list:

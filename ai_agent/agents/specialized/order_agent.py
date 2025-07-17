@@ -2,6 +2,7 @@ import json
 from typing import Dict, Any
 from ..core.base_agent import BaseAgent
 from ..utils import handle_pending_action_utils
+from rapidfuzz import process, fuzz  # Thêm import fuzzy match
 
 class OrderAgent(BaseAgent):
     """
@@ -15,7 +16,37 @@ class OrderAgent(BaseAgent):
             gemini_model=gemini_model,
             user_role=user_role
         )
-    
+        self.menu_items = None  # Cache menu items
+
+    def _load_menu_items(self):
+        if self.menu_items is not None:
+            return self.menu_items
+        # Lấy từ knowledge_base
+        self.menu_items = [item for item in self.knowledge_base if item.get("type") == "menu_item" or ("itemId" in item and "name" in item)]
+        return self.menu_items
+
+    def find_best_menu_match(self, item_name_or_id):
+        menu_items = self._load_menu_items()
+        # Nếu là số, tra cứu theo ID
+        try:
+            item_id = int(item_name_or_id)
+            for item in menu_items:
+                if str(item.get("itemId")) == str(item_id):
+                    return [item]
+        except Exception:
+            pass
+        # Fuzzy match theo tên
+        names = [item["name"] for item in menu_items]
+        best_match = process.extractOne(item_name_or_id, names, scorer=fuzz.token_sort_ratio)
+        if best_match and best_match[1] > 90:
+            idx = names.index(best_match[0])
+            return [menu_items[idx]]
+        elif best_match and best_match[1] > 70:
+            matches = process.extract(item_name_or_id, names, scorer=fuzz.token_sort_ratio, limit=3)
+            return [menu_items[names.index(m[0])] for m in matches if m[1] > 70]
+        else:
+            return []
+
     def get_system_prompt(self) -> str:
         return """
         Bạn là nhân viên phục vụ chuyên nghiệp của nhà hàng Việt Nam.
@@ -96,51 +127,47 @@ class OrderAgent(BaseAgent):
     
     def _extract_order_parameters(self, user_input: str, tool: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Trích xuất thông tin từ user input cho order
+        Dùng AI để phân tích user_input và trả về params (orderId, itemName/name, quantity)
         """
         import re
-        params = {}
-        user_input_lower = user_input.lower()
-        
-        # Trích xuất thông tin cơ bản
-        if "add_item_to_order" in tool.get("name", ""):
-            # Order ID
-            order_match = re.search(r'đơn hàng\s+(\d+)', user_input_lower)
-            if order_match:
-                params["orderId"] = int(order_match.group(1))
-            
-            # Tên món
-            item_match = re.search(r'(?:thêm|đặt)\s+(\d+)?\s*(\w+(?:\s+\w+)*?)(?:\s+(\d+))?', user_input_lower)
-            if item_match:
-                quantity = item_match.group(1) or item_match.group(3) or "1"
-                item_name = item_match.group(2)
-                params["itemName"] = item_name.strip()
-                params["quantity"] = int(quantity)
-        
-        elif "remove_item_from_order" in tool.get("name", ""):
-            # Order ID
-            order_match = re.search(r'đơn hàng\s+(\d+)', user_input_lower)
-            if order_match:
-                params["orderId"] = int(order_match.group(1))
-            
-            # Tên món
-            item_match = re.search(r'(?:xóa|bỏ)\s+(\w+(?:\s+\w+)*?)', user_input_lower)
-            if item_match:
-                params["itemName"] = item_match.group(1).strip()
-        
-        elif "complete_order" in tool.get("name", ""):
-            # Order ID
-            order_match = re.search(r'đơn hàng\s+(\d+)', user_input_lower)
-            if order_match:
-                params["orderId"] = int(order_match.group(1))
-        
-        elif "calculate_bill" in tool.get("name", ""):
-            # Booking ID
-            booking_match = re.search(r'booking\s+(\d+)', user_input_lower)
-            if booking_match:
-                params["bookingId"] = int(booking_match.group(1))
-        
-        return params
+        prompt = f"""
+        Phân tích yêu cầu sau và trả về JSON với các trường:
+        {{
+          \"orderId\": (số, nếu có),
+          \"itemName\": (tên món, nếu có),
+          \"name\": (tên món, nếu có),
+          \"quantity\": (số lượng, nếu có)
+        }}
+        Nếu không có trường nào thì để null.
+        Yêu cầu: \"{user_input}\"
+        """
+        response_text = self._call_gemini(prompt)
+        # Improved markdown code block removal
+        response_text = response_text.strip()
+        if response_text.startswith("```"):
+            # Remove opening ```json or ``` and closing ```
+            response_text = re.sub(r'^```[a-zA-Z]*\s*', '', response_text)
+            response_text = re.sub(r'```\s*$', '', response_text)
+            response_text = response_text.strip()
+        try:
+            params = json.loads(response_text)
+            required = tool.get("parameters", [])
+            # Ưu tiên lấy itemName
+            item_name = params.get("itemName") or params.get("name")
+            if item_name:
+                matches = self.find_best_menu_match(item_name)
+                if len(matches) == 1:
+                    params["itemName"] = matches[0]["name"]
+                    params["itemId"] = matches[0]["itemId"]
+                elif len(matches) > 1:
+                    # Gợi ý danh sách món gần đúng
+                    params["itemName_candidates"] = [{"name": m["name"], "itemId": m["itemId"]} for m in matches]
+                else:
+                    params["itemName_candidates"] = []
+            return {k: v for k, v in params.items() if v is not None}
+        except Exception as e:
+            print(f"[OrderAgent] Lỗi parse params từ AI: {e} | raw: {response_text}")
+            return {}
     
     def _check_missing_parameters(self, params: Dict[str, Any], tool: Dict[str, Any]) -> list:
         """
@@ -157,49 +184,32 @@ class OrderAgent(BaseAgent):
     
     def _ask_for_missing_info(self, missing_params: list, tool: Dict[str, Any], original_input: str) -> Dict[str, Any]:
         """
-        Hỏi thêm thông tin thiếu cho order
+        Hỏi thêm thông tin thiếu cho order, hỗ trợ gợi ý món gần đúng
         """
         tool_name = tool.get("name", "")
-        
+        response = ""
         if "add_item_to_order" in tool_name:
             questions = []
             if "orderId" in missing_params:
                 questions.append("Bạn muốn thêm món vào đơn hàng nào? (VD: đơn hàng 5)")
             if "itemName" in missing_params:
-                questions.append("Bạn muốn thêm món gì?")
+                questions.append("Bạn muốn thêm món gì? (Bạn có thể nhập tên hoặc ID món ăn)")
             if "quantity" in missing_params:
                 questions.append("Bạn muốn thêm bao nhiêu phần?")
-            
             response = f"Để thêm món vào đơn hàng, tôi cần thêm thông tin:\n"
             response += "\n".join([f"- {q}" for q in questions])
             response += "\n\nBạn có thể cung cấp thông tin này không?"
-        
-        elif "remove_item_from_order" in tool_name:
-            questions = []
-            if "orderId" in missing_params:
-                questions.append("Bạn muốn xóa món khỏi đơn hàng nào? (VD: đơn hàng 5)")
-            if "itemName" in missing_params:
-                questions.append("Bạn muốn xóa món gì?")
-            
-            response = f"Để xóa món khỏi đơn hàng, tôi cần thêm thông tin:\n"
-            response += "\n".join([f"- {q}" for q in questions])
-            response += "\n\nBạn có thể cung cấp thông tin này không?"
-        
-        elif "complete_order" in tool_name:
-            if "orderId" in missing_params:
-                response = "Bạn muốn hoàn thành đơn hàng nào? Vui lòng cho biết mã đơn hàng."
+        # Nếu có gợi ý món gần đúng
+        elif "itemName_candidates" in tool:
+            candidates = tool["itemName_candidates"]
+            if candidates:
+                response = "Tôi tìm thấy các món gần giống: "
+                response += ", ".join([f'{c["name"]} (ID: {c["itemId"]})' for c in candidates])
+                response += ". Bạn muốn chọn món nào? (Nhập tên hoặc ID)"
             else:
-                response = "Tôi cần mã đơn hàng để hoàn thành cho bạn."
-        
-        elif "calculate_bill" in tool_name:
-            if "bookingId" in missing_params:
-                response = "Bạn muốn tính tiền cho booking nào? Vui lòng cho biết mã booking."
-            else:
-                response = "Tôi cần mã booking để tính tiền cho bạn."
-        
+                response = "Không tìm thấy món ăn phù hợp. Bạn vui lòng nhập lại tên hoặc ID món ăn."
         else:
             response = "Tôi cần thêm thông tin để thực hiện yêu cầu của bạn."
-        
         return self.create_response(
             action="ask_for_info",
             parameters={"missing_params": missing_params, "original_tool": tool_name},

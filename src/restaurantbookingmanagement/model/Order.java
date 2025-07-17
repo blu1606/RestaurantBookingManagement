@@ -10,6 +10,7 @@ import java.util.List;
 public class Order {
     private int orderId;
     private transient Booking booking;
+    private int bookingId; // Thêm trường bookingId để serialize
     private List<OrderItem> items;
     private LocalDateTime orderTime;
     private String status; // "PENDING", "PREPARING", "READY", "COMPLETED"
@@ -19,6 +20,7 @@ public class Order {
     public Order(int orderId, Booking booking) {
         this.orderId = orderId;
         this.booking = booking;
+        this.bookingId = booking != null ? booking.getBookingId() : 0;
         this.items = new ArrayList<>();
         this.orderTime = LocalDateTime.now();
         this.status = "PENDING";
@@ -56,7 +58,17 @@ public class Order {
     }
     
     public int getBookingId() {
-        return booking != null ? booking.getBookingId() : 0;
+        return booking != null ? booking.getBookingId() : bookingId;
+    }
+    public void setBookingId(int bookingId) {
+        this.bookingId = bookingId;
+    }
+    public void setBooking(Booking booking) {
+        this.booking = booking;
+        this.bookingId = booking != null ? booking.getBookingId() : 0;
+        if (booking != null && booking.getTable() != null) {
+            this.tableId = booking.getTable().getTableId();
+        }
     }
     public Table getTable() {
         return booking != null ? booking.getTable() : null;
@@ -89,13 +101,6 @@ public class Order {
     // Setters
     public void setOrderId(int orderId) {
         this.orderId = orderId;
-    }
-    
-    public void setBooking(Booking booking) {
-        this.booking = booking;
-        if (booking != null && booking.getTable() != null) {
-            this.tableId = booking.getTable().getTableId();
-        }
     }
     
     public void setItems(List<OrderItem> items) {

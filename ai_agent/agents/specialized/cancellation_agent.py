@@ -98,46 +98,30 @@ class CancellationAgent(BaseAgent):
     
     def _extract_cancellation_parameters(self, user_input: str, tool: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Trích xuất thông tin từ user input cho cancellation
+        Dùng AI để phân tích user_input và trả về params (bookingId, guests, dateTime...)
         """
         import re
-        params = {}
-        user_input_lower = user_input.lower()
-        
-        # Trích xuất thông tin cơ bản
-        if "cancel_booking" in tool.get("name", ""):
-            # Booking ID
-            booking_match = re.search(r'đặt bàn\s+(\d+)', user_input_lower)
-            if not booking_match:
-                booking_match = re.search(r'booking\s+(\d+)', user_input_lower)
-            if not booking_match:
-                booking_match = re.search(r'(\d+)', user_input_lower)
-            if booking_match:
-                params["bookingId"] = int(booking_match.group(1))
-        
-        elif "update_booking" in tool.get("name", ""):
-            # Booking ID
-            booking_match = re.search(r'đặt bàn\s+(\d+)', user_input_lower)
-            if not booking_match:
-                booking_match = re.search(r'booking\s+(\d+)', user_input_lower)
-            if not booking_match:
-                booking_match = re.search(r'(\d+)', user_input_lower)
-            if booking_match:
-                params["bookingId"] = int(booking_match.group(1))
-            
-            # Số người
-            guests_match = re.search(r'(\d+)\s*người', user_input_lower)
-            if guests_match:
-                params["guests"] = int(guests_match.group(1))
-            
-            # Thời gian
-            time_match = re.search(r'vào\s+(\d+h?\s*\d*)\s*(tối|sáng|chiều)?', user_input_lower)
-            if time_match:
-                time_str = time_match.group(1)
-                period = time_match.group(2) or ""
-                params["dateTime"] = self._format_time(time_str, period)
-        
-        return params
+        prompt = f"""
+        Phân tích yêu cầu sau và trả về JSON với các trường:
+        {{
+          \"bookingId\": (mã đặt bàn, nếu có),
+          \"guests\": (số người, nếu có),
+          \"dateTime\": (thời gian, nếu có)
+        }}
+        Nếu không có trường nào thì để null.
+        Yêu cầu: \"{user_input}\"
+        """
+        response_text = self._call_gemini(prompt)
+        # Loại bỏ code block markdown nếu có
+        if response_text.strip().startswith("```"):
+            response_text = re.sub(r"^```[a-zA-Z]*\\s*|```$", "", response_text.strip(), flags=re.MULTILINE).strip()
+        try:
+            params = json.loads(response_text)
+            required = tool.get("parameters", [])
+            return {k: v for k, v in params.items() if v is not None}
+        except Exception as e:
+            print(f"[CancellationAgent] Lỗi parse params từ AI: {e} | raw: {response_text}")
+            return {}
     
     def _check_missing_parameters(self, params: Dict[str, Any], tool: Dict[str, Any]) -> list:
         """

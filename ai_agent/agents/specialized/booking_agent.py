@@ -108,54 +108,32 @@ class BookingAgent(BaseAgent):
     
     def _extract_booking_parameters(self, user_input: str, tool: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Trích xuất thông tin từ user input
+        Dùng AI để phân tích user_input và trả về params (customerName, customerPhone, guests, dateTime, bookingId...)
         """
         import re
-        params = {}
-        user_input_lower = user_input.lower()
-        
-        # Trích xuất thông tin cơ bản
-        if "create_booking" in tool.get("name", ""):
-            # Tên khách hàng
-            name_match = re.search(r'cho\s+(\w+)', user_input_lower)
-            if name_match:
-                params["customerName"] = name_match.group(1).title()
-            
-            # Số điện thoại
-            phone_match = re.search(r'(\d{10,11})', user_input)
-            if phone_match:
-                params["customerPhone"] = phone_match.group(1)
-            
-            # Số người
-            guests_match = re.search(r'(\d+)\s*người', user_input_lower)
-            if guests_match:
-                params["guests"] = int(guests_match.group(1))
-            
-            # Thời gian
-            time_match = re.search(r'vào\s+(\d+h?\s*\d*)\s*(tối|sáng|chiều)?', user_input_lower)
-            if time_match:
-                time_str = time_match.group(1)
-                period = time_match.group(2) or ""
-                params["dateTime"] = self._format_time(time_str, period)
-        
-        elif "update_booking" in tool.get("name", ""):
-            # Booking ID
-            id_match = re.search(r'(\d+)', user_input)
-            if id_match:
-                params["bookingId"] = int(id_match.group(1))
-            
-            # Số người
-            guests_match = re.search(r'(\d+)\s*người', user_input_lower)
-            if guests_match:
-                params["guests"] = int(guests_match.group(1))
-        
-        elif "cancel_booking" in tool.get("name", ""):
-            # Booking ID
-            id_match = re.search(r'(\d+)', user_input)
-            if id_match:
-                params["bookingId"] = int(id_match.group(1))
-        
-        return params
+        prompt = f"""
+        Phân tích yêu cầu sau và trả về JSON với các trường:
+        {{
+          \"customerName\": (tên khách, nếu có),
+          \"customerPhone\": (số điện thoại, nếu có),
+          \"guests\": (số người, nếu có),
+          \"dateTime\": (thời gian, nếu có),
+          \"bookingId\": (mã đặt bàn, nếu có)
+        }}
+        Nếu không có trường nào thì để null.
+        Yêu cầu: \"{user_input}\"
+        """
+        response_text = self._call_gemini(prompt)
+        # Loại bỏ code block markdown nếu có
+        if response_text.strip().startswith("```"):
+            response_text = re.sub(r"^```[a-zA-Z]*\\s*|```$", "", response_text.strip(), flags=re.MULTILINE).strip()
+        try:
+            params = json.loads(response_text)
+            required = tool.get("parameters", [])
+            return {k: v for k, v in params.items() if v is not None}
+        except Exception as e:
+            print(f"[BookingAgent] Lỗi parse params từ AI: {e} | raw: {response_text}")
+            return {}
     
     def _check_missing_parameters(self, params: Dict[str, Any], tool: Dict[str, Any]) -> list:
         """

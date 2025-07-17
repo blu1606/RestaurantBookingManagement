@@ -153,7 +153,7 @@ public class UserController {
         boolean added = orderService.addOrderItem(req, menuService);
         if (added) {
             view.displayMessage("Đã thêm món vào đơn hàng.");
-            Order updatedOrder = orderService.getOrCreateOrderForBooking(req.getBooking());
+            Order updatedOrder = orderService.getOrderForBooking(req.getBooking());
             if (updatedOrder != null) {
                 view.displayOrder(updatedOrder);
             }
@@ -180,7 +180,7 @@ public class UserController {
      * Xử lý thanh toán cho một bàn cụ thể
      */
     private void handleSingleBillPayment(Booking booking) {
-        Order order = orderService.getOrCreateOrderForBooking(booking);
+        Order order = orderService.getOrderForBooking(booking);
         
         // Kiểm tra nếu order đã được thanh toán
         if ("COMPLETED".equals(order.getStatus())) {
@@ -288,7 +288,7 @@ public class UserController {
             view.displayError("❌ Bạn chưa đặt bàn. Vui lòng đặt bàn trước khi hủy món.");
             return;
         }
-        Order order = orderService.getOrCreateOrderForBooking(booking);
+        Order order = orderService.getOrderForBooking(booking);
         Order.OrderItem toRemove = view.getOrderItemForRemove(order);
         if (toRemove == null) {
             view.displayMessage("Đã hủy thao tác hủy món.");
@@ -315,15 +315,18 @@ public class UserController {
             view.displayError("Bạn cần đăng nhập trước khi đặt bàn qua AI.");
             return;
         }
-        String userInput = view.getInputHandler().getStringWithCancel("Nhập yêu cầu đặt bàn (ví dụ: Đặt bàn cho 4 người tối nay):");
-        if (userInput == null) {
-            view.displayMessage("Đã hủy thao tác đặt bàn qua AI.");
-            return;
+        view.displayMessage("\n--- Chế độ Chat với AI (gõ 'back' để quay lại menu) ---");
+        while (true) {
+            String userInput = view.getUserInput();
+            if (userInput == null || userInput.equalsIgnoreCase("back") || userInput.equalsIgnoreCase("menu")) {
+                view.displayMessage("Quay lại menu chính.");
+                break;
         }
         // Gọi AI Agent, truyền thông tin user
         AIResponse aiResponse = aiController.chatWithAI(userInput, "user", currentCustomer);
         // Xử lý action từ AIResponse qua AiService
         aiService.processAIResponse(aiResponse, orderService, bookingService, customerService, view);
+        }
     }
     
     /**

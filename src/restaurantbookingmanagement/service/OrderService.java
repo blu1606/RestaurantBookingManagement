@@ -53,9 +53,9 @@ public class OrderService {
     }
     
     /**
-     * Tạo order cho booking cụ thể hoặc tìm order hiện có
+     * Lấy order hiện có cho booking (chỉ trả về order chưa hoàn thành, không tạo mới)
      */
-    public Order getOrCreateOrderForBooking(Booking booking) {
+    public Order getOrderForBooking(Booking booking) {
         List<Order> orders = orderFileService.readOrdersFromFile();
         // Ánh xạ lại booking cho tất cả order nếu bị null
         for (Order order : orders) {
@@ -64,20 +64,18 @@ public class OrderService {
                 order.setBooking(b);
             }
         }
-        // Sửa filter: kiểm tra null
-        Order existingOrder = orders.stream()
+        Order foundOrder = orders.stream()
                 .filter(order -> order.getBooking() != null && order.getBooking().getBookingId() == booking.getBookingId() && 
                                !order.getStatus().equals("COMPLETED"))
                 .findFirst()
                 .orElse(null);
-        if (existingOrder != null) {
-            return existingOrder;
+        if (foundOrder != null) {
+            // Đảm bảo mọi OrderItem đều có MenuItem
+            List<Order> singleOrderList = new ArrayList<>();
+            singleOrderList.add(foundOrder);
+            updateOrderItemsWithMenuItems(singleOrderList);
         }
-        // Tạo order mới nếu chưa có
-        Order newOrder = new Order(nextOrderId++, booking);
-        orders.add(newOrder);
-        orderFileService.writeOrdersToFile(orders);
-        return newOrder;
+        return foundOrder;
     }
     
     /**
@@ -211,7 +209,7 @@ public class OrderService {
         List<Order> orders = orderFileService.readOrdersFromFile();
         // Ánh xạ lại booking, table, menu item như cũ
         for (Order order : orders) {
-            if (order.getBooking() == null && order.getBookingId() > 0) {
+            if ((order.getBooking() == null || order.getBookingId() > 0) && order.getBookingId() > 0) {
                 Booking booking = bookingService.findBookingById(order.getBookingId());
                 order.setBooking(booking);
             }
@@ -250,7 +248,7 @@ public class OrderService {
      * Thêm món vào order từ OrderRequest DTO (refactor cho controller mỏng)
      */
     public boolean addOrderItem(OrderRequest req, MenuService menuService) {
-        Order order = getOrCreateOrderForBooking(req.getBooking());
+        Order order = getOrderForBooking(req.getBooking());
         MenuItem item = null;
         try {
             int id = Integer.parseInt(req.getItemInput());
@@ -259,6 +257,15 @@ public class OrderService {
             item = menuService.findMenuItemByName(req.getItemInput());
         }
         if (item == null) return false;
+        if (order == null) {
+            // Tạo order mới nếu chưa có
+            order = new Order(nextOrderId++, req.getBooking());
+            order.addItem(item.getItemId(), req.getQuantity());
+            List<Order> orders = orderFileService.readOrdersFromFile();
+            orders.add(order);
+            orderFileService.writeOrdersToFile(orders);
+            return true;
+        }
         return addItemToOrder(order.getOrderId(), item.getItemId(), req.getQuantity());
     }
 

@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "bookingId": 4,
+    "customer": {
+      "customerId": 4,
+      "name": "hoang",
+      "phone": "0946689791",
+      "email": "dongthanhquandtq@gmail.com",
+      "activeBookingIds": [
+        1,
+        2,
+        3
+      ],
+      "role": "user",
+      "password": "1111"
+    },
+    "table": {
+      "tableId": 2,
+      "capacity": 4,
+      "status": "RESERVED",
+      "orderIds": []
+    },
+    "bookingTime": "2025-07-26T19:00:00",
+    "numberOfGuests": 3,
+    "status": "CONFIRMED",
+    "customerId": 0,
+    "tableId": 0
+  }
+]

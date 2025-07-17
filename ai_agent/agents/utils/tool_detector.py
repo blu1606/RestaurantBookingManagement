@@ -57,7 +57,30 @@ class ToolDetector:
         try:
             if not self.embedding_model:
                 return []
-            return self.embedding_model.embed_query(text)
+            
+            # Add retry logic for embedding
+            import time
+            max_retries = 3
+            retry_delay = 1  # seconds
+            
+            for attempt in range(max_retries):
+                try:
+                    return self.embedding_model.embed_query(text)
+                except Exception as e:
+                    if "504" in str(e) or "Deadline Exceeded" in str(e):
+                        if attempt < max_retries - 1:
+                            print(f"⚠️ ToolDetector: Embedding timeout (attempt {attempt + 1}/{max_retries}), retrying in {retry_delay}s...")
+                            time.sleep(retry_delay)
+                            retry_delay *= 2  # Exponential backoff
+                            continue
+                        else:
+                            print(f"🔥 ToolDetector: Embedding failed after {max_retries} attempts: {e}")
+                            return []
+                    else:
+                        print(f"🔥 ToolDetector: Error getting embedding: {e}")
+                        return []
+            
+            return []
         except Exception as e:
             print(f"🔥 ToolDetector: Error getting embedding: {e}")
             return []

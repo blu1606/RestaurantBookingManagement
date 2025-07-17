@@ -254,8 +254,8 @@ public class OrderController {
     /**
      * Lấy hoặc tạo order cho booking
      */
-    public Order getOrCreateOrderForBooking(Booking booking) {
-        return orderService.getOrCreateOrderForBooking(booking);
+    public Order getOrderForBooking(Booking booking) {
+        return orderService.getOrderForBooking(booking);
     }
     
     /**

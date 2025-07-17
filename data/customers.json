@@ -31,8 +31,31 @@
     "name": "hoang",
     "phone": "0946689791",
     "email": "dongthanhquandtq@gmail.com",
-    "activeBookingIds": [],
+    "activeBookingIds": [
+      1,
+      2,
+      3,
+      4
+    ],
     "role": "user",
     "password": "1111"
+  },
+  {
+    "customerId": 5,
+    "name": "blue",
+    "phone": "0911",
+    "email": "11@",
+    "activeBookingIds": [],
+    "role": "user",
+    "password": "hh"
+  },
+  {
+    "customerId": 6,
+    "name": "hoàng",
+    "phone": "11",
+    "email": "ho11",
+    "activeBookingIds": [],
+    "role": "user",
+    "password": "1101"
   }
 ]

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.time.format.DateTimeFormatter;
+import restaurantbookingmanagement.view.ConsoleView;
 
 // Design Pattern: Dependency Injection
 // Purpose: Inject BookingService and CustomerSearchService for flexible and testable customer logic.
@@ -292,6 +293,13 @@ public class CustomerService {
             }
         }
         System.out.println("──────────────────────────────────────────────────────────────");
+    }
+    
+    /**
+     * Hiển thị danh sách khách hàng theo list truyền vào
+     */
+    public void displayAllCustomers(List<Customer> customers, ConsoleView view) {
+        view.displayAllCustomers(customers);
     }
     
     /**

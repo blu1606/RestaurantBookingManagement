@@ -42,6 +42,20 @@ public class AIActionHandlerRegistry {
         handlers.put("ask_for_info", new AskForInfoHandler());
         handlers.put("error", new ErrorHandler());
         handlers.put("menu_suggestion", new MenuSuggestionActionHandler());
+        handlers.put("out_of_scope", new OutOfScopeHandler());
+        handlers.put("clarify", new ClarifyHandler());
+        handlers.put("redirect", new RedirectHandler());
+        handlers.put("general_info", new GeneralInfoHandler());
+        handlers.put("restaurant_address", new GeneralInfoHandler());
+        handlers.put("opening_hours", new GeneralInfoHandler());
+        handlers.put("contact_info", new GeneralInfoHandler());
+        handlers.put("services_info", new GeneralInfoHandler());
+        handlers.put("directions", new GeneralInfoHandler());
+        handlers.put("greeting", new GeneralInfoHandler());
+        handlers.put("positive_feedback", new GeneralInfoHandler());
+        handlers.put("negative_feedback", new GeneralInfoHandler());
+        handlers.put("suggestion", new GeneralInfoHandler());
+        handlers.put("thank_you", new GeneralInfoHandler());
     }
     // --- Handler implementations ---
     public static class DeleteMenuHandler implements AIActionHandler {
@@ -217,10 +231,7 @@ public class AIActionHandlerRegistry {
             if (results.isEmpty()) {
                 view.displayMessage("📝 Không tìm thấy bàn nào phù hợp với: " + keyword);
             } else {
-                view.displayMessage("📝 Tìm thấy " + results.size() + " bàn:");
-                for (Table table : results) {
-                    view.displayMessage("  - Bàn #" + table.getTableId() + " (" + table.getCapacity() + " người, " + table.getStatus() + ")");
-                }
+                view.displayTables(results);
             }
         }
     }
@@ -228,28 +239,14 @@ public class AIActionHandlerRegistry {
         @Override
         public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             java.util.List<Table> availableTables = context.getTableService().getAvailableTables();
-            if (availableTables.isEmpty()) {
-                view.displayMessage("📝 Không có bàn nào có sẵn.");
-            } else {
-                view.displayMessage("📝 Có " + availableTables.size() + " bàn có sẵn:");
-                for (Table table : availableTables) {
-                    view.displayMessage("  - Bàn #" + table.getTableId() + " (" + table.getCapacity() + " người, " + table.getStatus() + ")");
-                }
-            }
+            view.displayTables(availableTables);
         }
     }
     public static class ShowAllTablesHandler implements AIActionHandler {
         @Override
         public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             java.util.List<Table> allTables = context.getTableService().getAllTables();
-            if (allTables.isEmpty()) {
-                view.displayMessage("📝 Không có bàn nào.");
-            } else {
-                view.displayMessage("📝 Có " + allTables.size() + " bàn:");
-                for (Table table : allTables) {
-                    view.displayMessage("  - Bàn #" + table.getTableId() + " (" + table.getCapacity() + " người, " + table.getStatus() + ")");
-                }
-            }
+            view.displayTables(allTables);
         }
     }
     public static class CancelBookingHandler implements AIActionHandler {
@@ -402,10 +399,7 @@ public class AIActionHandlerRegistry {
             if (results.isEmpty()) {
                 view.displayMessage("📝 Không tìm thấy khách hàng nào phù hợp với: " + searchTerm);
             } else {
-                view.displayMessage("📝 Tìm thấy " + results.size() + " khách hàng:");
-                for (Customer customer : results) {
-                    view.displayMessage("  - " + customer.getName() + " (" + customer.getPhone() + ")");
-                }
+                context.getCustomerService().displayAllCustomers(results, view);
             }
         }
     }
@@ -479,6 +473,46 @@ public class AIActionHandlerRegistry {
         public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
             // Hiển thị gợi ý món ăn từ naturalResponse
             view.displayMessage(response.getNaturalResponse());
+        }
+    }
+    public static class OutOfScopeHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            String msg = response.getNaturalResponse();
+            if (msg == null || msg.trim().isEmpty()) {
+                msg = "Xin lỗi, yêu cầu của bạn nằm ngoài phạm vi hỗ trợ của hệ thống.";
+            }
+            view.displayMessage(msg);
+        }
+    }
+    public static class ClarifyHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            String msg = response.getNaturalResponse();
+            if (msg == null || msg.trim().isEmpty()) {
+                msg = "Xin vui lòng làm rõ yêu cầu của bạn.";
+            }
+            view.displayMessage(msg);
+        }
+    }
+    public static class RedirectHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            String msg = response.getNaturalResponse();
+            if (msg == null || msg.trim().isEmpty()) {
+                msg = "Yêu cầu của bạn đã được chuyển hướng tới bộ phận phù hợp.";
+            }
+            view.displayMessage(msg);
+        }
+    }
+    public static class GeneralInfoHandler implements AIActionHandler {
+        @Override
+        public void handle(AIResponse response, ServiceContext context, ConsoleView view) {
+            String msg = response.getNaturalResponse();
+            if (msg == null || msg.trim().isEmpty()) {
+                msg = "Thông tin tổng quát về nhà hàng.";
+            }
+            view.displayMessage(msg);
         }
     }
     public AIActionHandler get(String action) {
